@@ -20,18 +20,17 @@
       .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
-      .button.success{background:var(--good); color:#fff; border-color:transparent}
+      .button.success{background:var(--good); color:#fff; border-color:transparent} /* 子どもボタンを緑 */
       .button.x{background:#111; color:#fff; border-color:#111}
       .button.fb{background:#1877F2; color:#fff; border-color:#1877F2}
-      .button.ig{background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af,#515bd4); color:#fff; border-color:transparent}
       .button[disabled]{opacity:.5; cursor:not-allowed}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
-      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}  /* 70% */
+      .hero img{width:70%; max-width:800px; margin:0 auto; display:block} /* タイトル画像70% */
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
-      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db}
+      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db} /* 薄い黄色 */
       .likert button:hover{background:#ffefaf}
       .likert button.active{background:#fde68a; border-color:#facc15}
       .cols{display:grid; gap:16px}
@@ -52,6 +51,11 @@
       .cta ul{margin:6px 0 0 1.2em}
       .share{display:grid; gap:10px; justify-items:center}
       .share .buttons{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+      .level-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+      @media(min-width:700px){.level-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+      .level-item{border:1px solid var(--ring); border-radius:12px; padding:10px; background:#fff}
+      .level-item .lv{font-weight:700}
+      .chip{display:inline-block; padding:2px 8px; font-size:12px; border-radius:999px; background:#f1f5f9; margin-left:6px}
     </style>
   </head>
   <body>
@@ -72,14 +76,14 @@
     </footer>
 
     <script>
-      // ============ 設定 ============
+      /* ================= 設定 ================= */
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
 
-      // 画像パス
+      // 画像パス（hyper/hypo で分岐）
       const IMAGES = {
         title: 'images/title-image.png',
-        roles: {
+        rolesHyper: {
           hearing:   'images/job-elf-scout.png',
           vision:    'images/job-wizard.png',
           touch:     'images/job-guardian.png',
@@ -88,11 +92,19 @@
           tempPain:  'images/job-weather-mage.png',
           movement:  'images/job-knight.png'
         },
-        // バランス型（ノーマライザー）専用画像
-        balanced: 'images/job-nomal.png'
+        rolesHypo: {
+          hearing:   'images/job-hearing-hypo.png',
+          vision:    'images/job-vision-hypo.png',
+          touch:     'images/job-touch-hypo.png',
+          smell:     'images/job-smell-hypo.png',
+          taste:     'images/job-taste-hypo.png',
+          tempPain:  'images/job-tempPain-hypo.png',
+          movement:  'images/job-movement-hypo.png'
+        },
+        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー
       };
 
-      // 役職ネーミング（過敏/鈍麻）※バランス型は個別指定
+      // 称号テーブル
       const TITLES = {
         hyper: {
           hearing:  { t: 'エルフ耳の斥候（スカウト）', role: 'スカウト' },
@@ -104,17 +116,16 @@
           movement: { t: '揺れセンサー搭載者（ナイト）', role: 'ナイト' },
         },
         hypo: {
-          hearing:  { t: '鉄壁の鼓膜', role: 'レンジャー' },
-          vision:   { t: '闇夜の潜行者', role: 'ローグ' },
-          touch:    { t: '鋼の肌感', role: 'ナイト' },
-          smell:    { t: '香辛料の勇者', role: 'アルケミスト' },
-          taste:    { t: '激辛の友', role: 'レンジャー' },
-          tempPain: { t: '季節と握手する人', role: 'レンジャー' },
-          movement: { t: 'スリルハンター', role: 'レンジャー' },
+          hearing:  { t: '戦場の鼓手（バード）', role: 'バード' },
+          vision:   { t: '月影のハンター（ハンター）', role: 'ハンター' },
+          touch:    { t: '鉄皮のモンク（モンク）', role: 'モンク' },
+          smell:    { t: '炉心の鍛冶師（ブラックスミス）', role: 'ブラックスミス' },
+          taste:    { t: '香辛の冒険家（エクスプローラー）', role: 'エクスプローラー' },
+          tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
+          movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
         },
       };
 
-      // 7軸
       const AXES = [
         { key: 'hearing',  label: '聴覚' },
         { key: 'vision',   label: '視覚' },
@@ -125,7 +136,7 @@
         { key: 'movement', label: '動き' },
       ];
 
-      // 質問バンク（表現微調整済）
+      /* ================ 質問 ================ */
       const BANK = [
         // 聴覚
         { id: 'h_h_1', axis: 'hearing', trait: 'hyper', child: '教室のざわざわがつらく、耳をふさぎたくなることがある', adult: '店内やオフィスのざわめきで集中が切れやすい' },
@@ -195,20 +206,17 @@
         { v:3, label:'よくある' },
         { v:4, label:'とても強い' },
       ];
-
       const MODE_MAP = { easy:12, normal:18, deep:30 };
 
-      // ======= 状態 =======
-      let who = null; // 'self' | 'child'
-      let phrasing = 'adult'; // 表現は大人向けに固定
-      let mode = null; // 'easy'|'normal'|'deep'
-      let qs = []; // 質問配列
-      let answers = {}; // {qid:number}
-      let index = 0;
+      /* ================ 状態 ================ */
+      let who = null;       // 'self' | 'child'
+      let phrasing = 'adult'; // 表現は固定（子ども向け言い回しは使わない）
+      let mode = null;      // 'easy'|'normal'|'deep'
+      let qs = []; let answers = {}; let index = 0;
 
       const app = document.getElementById('app');
 
-      // ======= 画面レンダ =======
+      /* ================ 画面 ================ */
       function renderStart(){
         app.innerHTML = `
           <div class="grid">
@@ -257,7 +265,7 @@
       function renderQuestion(){
         const total = qs.length;
         const q = qs[index];
-        const text = phrasing==='child'? q.child : q.adult; // 現状 adult 固定
+        const text = phrasing==='child'? q.child : q.adult;
         const answered = answers[q.id];
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
@@ -268,7 +276,7 @@
                 <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
                 <div class="small">${index+1} / ${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">${text}</div>
+              <div style="font-size:18px; margin-bottom:20px">${text}</div> <!-- 質問とボタンの間に余白 -->
               <div class="likert" id="likert"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
                 <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
@@ -289,7 +297,7 @@
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-      // 回答→即・次へ
+      // 選択→即次へ
       function selectAndNext(value){
         const q = qs[index];
         answers[q.id] = value;
@@ -298,24 +306,26 @@
         else { renderResult(); }
       }
 
+      /* ================ 結果 ================ */
       function renderResult(){
-        const s = calcScores(qs, answers); // { radar, hyperAvg, hypoAvg, overall, dominant, maxAny }
-        const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny } = s;
+        const s = calcScores(qs, answers);
+        const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced } = s;
 
-        // タイトル＆画像
-        let titleObj = null, axisLabel = null, roleImg = null;
+        let titleObj = null, axisLabel = null, roleImg = null, level = null, lvLabel = 'Lv';
         if (overall === 'balanced') {
           titleObj = { t:'バランス型：ノーマライザー', role:'ノーマライザー' };
           axisLabel = 'バランス型';
-          roleImg = IMAGES.balanced; // 画像あり
+          roleImg = IMAGES.balanced;
+          level = lvBalanced;       // バランス度（0–99）
+          lvLabel = 'Lv（バランス度）';
         } else {
           const axis = AXES.find(a=>a.key===dominant);
           axisLabel = axis ? axis.label : '';
           titleObj = TITLES[overall][dominant];
-          roleImg = IMAGES.roles[dominant];
+          roleImg = overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant];
+          level = lvDominant;       // 代表軸の強さ（0–99）
         }
 
-        // 説明文（ヘッダー直下）
         let headNote = '';
         if (overall === 'balanced' && maxAny <= 20) {
           headNote = '今回は大きな偏りは見つかりませんでした。状況や体調によって感じ方がゆるやかに変わる、柔軟タイプかもしれません。';
@@ -325,7 +335,9 @@
           headNote = `いちばん特徴が強く出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
         }
 
-        // 画面
+        const payload = { v:2, overall, dominant, axisLabel, title:titleObj.t, radar, level, lvLabel };
+        const shareUrl = buildShareUrl(payload);
+
         app.innerHTML = `
           <div class="grid">
             <div class="card center">
@@ -333,20 +345,41 @@
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
-              <div class="small">ジョブ：${titleObj.role}</div>
+              <div class="small">${lvLabel}：<span style="font-weight:700">Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
               </div>
             </div>
 
+            <div class="card">
+              <h3>各特性のレベル</h3>
+              <div class="level-grid">
+                ${renderAxisLevelBadges(radar)}
+              </div>
+            </div>
+
             ${ overall==='balanced' && maxAny<=20 ? renderLowOverallCard() : renderAxisFeedback(radar) }
+
+            <div class="card share">
+              <div style="font-weight:700;">結果をシェア</div>
+              <div class="buttons">
+                <button id="shareXimg"  class="button x">X に画像付きで投稿</button>
+                <button id="shareXlink" class="button">X（テキスト＋リンク）</button>
+                <button id="shareFBimg" class="button fb">Facebook 画像付き</button>
+                <button id="shareFBlink" class="button">Facebook（リンクのみ）</button>
+              </div>
+              <div class="small muted" style="text-align:center;max-width:760px">
+                画像付き投稿は対応端末で動作します。できない場合は画像を保存しますので、各SNSでアップロードしてください。
+              </div>
+              <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
+            </div>
 
             <div class="card cta">
               <div class="cta-grid">
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
                   <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
-                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でわかりやすくお伝えします。</p>
+                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>（${lvLabel}：Lv${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
                   <ul>
                     <li>感覚過敏が学校生活に与える影響と見立て方（音・光・衣服・におい・食事・温度/痛み・動き）</li>
                     <li>家で今日からできる環境調整と声かけ（朝の準備、通学/在宅の工夫）</li>
@@ -361,22 +394,11 @@
                 </div>
               </div>
             </div>
-
-            <div class="card share">
-              <div style="font-weight:700;">結果をシェア</div>
-              <div class="buttons">
-                <button id="shareX"  class="button x">X に投稿</button>
-                <button id="shareFB" class="button fb">Facebook に投稿</button>
-                <button id="shareImg" class="button ig">Instagram用 画像を保存/共有</button>
-              </div>
-              <div class="small muted">※ Instagramは投稿用URLの事前入力ができないため、画像を保存してアプリから投稿してください（対応端末ではそのまま共有できます）。</div>
-              <div style="margin-top:8px"><button id="retryBtn" class="button">もう一度調べる</button></div>
-            </div>
           </div>`;
 
-        // チャート描画
+        // チャート
         const ctx = document.getElementById('radar');
-        const chart = new Chart(ctx, {
+        new Chart(ctx, {
           type: 'radar',
           data: {
             labels: radar.map(d=>d.axis),
@@ -388,112 +410,212 @@
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
 
-        // シェア周り
+        // 共有テキスト（やってみたくなるトーン）
         const axisLabelForShare = axisLabel || 'バランス型';
-        const shareText = makeShareText(titleObj.t, axisLabelForShare);
-        const shareUrl  = getSiteUrl();
+        const baseText1 = `感覚の特性を調べてみた｜称号「${titleObj.t}」 Lv${String(level).padStart(2,'0')}`;
+        const baseText2 = `自分はどっち寄り？ 過敏？鈍麻？ 自分の感覚特性を調べてみよう！`;
+        const shareText = `${baseText1}\n${baseText2}\n詳しくはこちら>> ${shareUrl}\n#KANKAKUクエスト #感覚過敏`;
 
-        document.getElementById('shareX').onclick = () => {
-          const t = encodeURIComponent(shareText);
+        // 画像付き投稿の共通処理
+        const shareImageFlow = async () => {
+          const img = await buildShareImage({
+            titleText: `${titleObj.t}  Lv${String(level).padStart(2,'0')}`,
+            axisLabel: axisLabelForShare,
+            leaning: (overall==='balanced' ? 'バランス' : ( (hyperAvg>=hypoAvg)?'過敏':'鈍麻' )),
+            radarCanvas: ctx,
+            roleImgSrc: (overall==='balanced'
+                          ? IMAGES.balanced
+                          : (overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant]))
+          });
+          await shareOrDownloadImage(img.blob, 'kankaku-quest.png', shareText);
+        };
+
+        // X: テキスト+リンク
+        document.getElementById('shareXlink').onclick = () => {
+          const t = encodeURIComponent(`${baseText1}\n${baseText2}\n#KANKAKUクエスト #感覚過敏`);
           const u = encodeURIComponent(shareUrl);
           window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`,'_blank');
         };
-        document.getElementById('shareFB').onclick = () => {
+        // X: 画像付き
+        document.getElementById('shareXimg').onclick = () => { shareImageFlow(); };
+
+        // FB: リンクのみ
+        document.getElementById('shareFBlink').onclick = () => {
           const u = encodeURIComponent(shareUrl);
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
         };
-        document.getElementById('shareImg').onclick = async () => {
-          try{
-            const img = await buildShareImage({
-              titleText: titleObj.t,
-              axisLabel: axisLabelForShare,
-              leaning: (overall==='balanced' ? 'バランス' : ( (hyperAvg>=hypoAvg)?'過敏':'鈍麻' )),
-              radarCanvas: ctx.canvas,
-              roleImgSrc: (overall==='balanced' ? IMAGES.balanced : IMAGES.roles[dominant])
-            });
-            await shareOrDownloadImage(img.blob, 'kankaku-quest.png', shareText);
-          }catch(e){
-            console.error(e);
-            alert('画像の作成に失敗しました。もう一度お試しください。');
-          }
-        };
+        // FB: 画像付き
+        document.getElementById('shareFBimg').onclick = () => { shareImageFlow(); };
 
-        // 「もう一度調べる」
         document.getElementById('retryBtn').onclick = () => { who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); };
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-      // ======= 低強度のときの全体コメント =======
-      function renderLowOverallCard(){
-        return `
-          <div class="card">
-            <h3>全体コメント</h3>
-            <p class="muted">今回の回答では、はっきり強い特性は見られませんでした。無理に「ラベルづけ」する必要はありません。</p>
-            <div class="cols" style="margin-top:8px">
-              <div>
-                <div style="font-weight:600; margin-bottom:6px">今の良さ</div>
-                <ul>
-                  <li>環境の変化に合わせて柔軟に動ける</li>
-                  <li>にぎやかさや光など、幅広い場面に対応しやすい</li>
-                </ul>
+      /* ================ 各特性Lvバッジ ================ */
+      function renderAxisLevelBadges(radar){
+        return radar.map(d=>{
+          const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
+          const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
+          return `
+            <div class="level-item">
+              <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
+              <div class="lv">Lv${String(lv).padStart(2,'0')}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      /* ================ ロジック ================ */
+      function pickQuestions(mode){
+        const count = MODE_MAP[mode];
+        const byAxis = Object.fromEntries(AXES.map(a=>[a.key,[]]));
+        BANK.forEach(q=>byAxis[q.axis].push(q));
+        const perAxisBase = Math.floor(count/AXES.length);
+        const remainder = count%AXES.length;
+        const out=[];
+        AXES.forEach((ax,i)=>{
+          const take = perAxisBase + (i<remainder?1:0);
+          const pool = byAxis[ax.key];
+          const hypers = pool.filter(q=>q.trait==='hyper');
+          const hypos  = pool.filter(q=>q.trait==='hypo');
+          let h=0,y=0;
+          for(let k=0;k<take;k++){
+            if(h<=y && h<hypers.length) out.push(hypers[h++]);
+            else if(y<hypos.length) out.push(hypos[y++]);
+            else if(h<hypers.length) out.push(hypers[h++]);
+          }
+        });
+        return out;
+      }
+
+      // パーセンテージ(0–100)→Lv(0–99)
+      function pctToLv(p){ return Math.min(99, Math.max(0, Math.floor(p*0.99))); }
+
+      // スコア計算
+      function calcScores(questions, answers){
+        const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
+        questions.forEach(q=>{
+          const v = answers[q.id];
+          if(v==null) return;
+          if(q.trait==='hyper'){sums[q.axis].h+=v; sums[q.axis].hc++;}
+          else {sums[q.axis].y+=v; sums[q.axis].yc++;}
+        });
+        const radar = AXES.map(ax=>{
+          const maxH = Math.max(1, sums[ax.key].hc*4);
+          const maxY = Math.max(1, sums[ax.key].yc*4);
+          const hyper = Math.round((sums[ax.key].h/maxH)*100);
+          const hypo  = Math.round((sums[ax.key].y/maxY)*100);
+          return { axis: ax.label, axisKey: ax.key, hyper, hypo };
+        });
+
+        const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
+        const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
+        const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
+        const diff     = Math.abs(hyperAvg - hypoAvg);
+        const EPS = 6;   // 傾向差のしきい値（%）
+        const LOW = 20;  // 低強度
+
+        let overall;
+        if (maxAny <= LOW || diff <= EPS) {
+          overall = 'balanced';
+        } else {
+          overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
+        }
+
+        // 代表軸
+        let dominantKey = radar[0].axisKey, best=-1;
+        radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
+
+        // Lv計算（0–99）
+        const dom = radar.find(r=>r.axisKey===dominantKey);
+        const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
+        const lvBalanced = pctToLv(100 - maxAny);
+
+        return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced };
+      }
+
+      /* ================ 共有ビュー描画 ================ */
+      function renderResultFromPayload(payload){
+        const { overall, dominant, axisLabel, title, radar, level, lvLabel } = payload;
+        const roleImg = (overall==='balanced')
+          ? IMAGES.balanced
+          : (overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant]);
+        app.innerHTML = `
+          <div class="grid">
+            <div class="card center">
+              <h2>結果（共有）</h2>
+              ${roleImg ? `<img class="role" src="${roleImg}" alt="${title}">` : ``}
+              <div style="font-weight:700; margin-top:6px">称号：${title}</div>
+              <div class="small">${lvLabel||'Lv'}：<span style="font-weight:700">Lv${String(level??'--').padStart(2,'0')}</span></div>
+              <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
+                <canvas id="radar"></canvas>
               </div>
-              <div>
-                <div style="font-weight:600; margin-bottom:6px">注意ポイント</div>
-                <ul>
-                  <li>体調や季節で一時的に苦手が出ることは誰にでもある</li>
-                  <li>「疲れやすい日」は早めに休む・刺激を減らす</li>
-                </ul>
+              <div style="margin-top:10px">
+                <button id="retryBtn2" class="button primary">自分でも調べる</button>
               </div>
-              <div>
-                <div style="font-weight:600; margin-bottom:6px">次の一歩</div>
-                <ul>
-                  <li>気になる場面が出たら、その時だけ工夫（耳栓・遮光・肌触りの良い服など）</li>
-                  <li>もっと詳しく知りたいときは「普通/しっかり」で再チェック</li>
-                </ul>
+            </div>
+            <div class="card">
+              <h3>各特性のレベル</h3>
+              <div class="level-grid">
+                ${renderAxisLevelBadges(radar)}
               </div>
             </div>
           </div>`;
+        const ctx = document.getElementById('radar');
+        new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: radar.map(d=>d.axis),
+            datasets: [
+              { label:'過敏', data: radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
+              { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
+            ]
+          },
+          options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
+        });
+        document.getElementById('retryBtn2').onclick=()=>{who=null; mode=null; renderStart();};
       }
 
-      // ======= シェア関連ユーティリティ =======
-      function makeShareText(titleText, axisLabel){
-        const tags = '#KANKAKUクエスト #感覚過敏';
-        return `KANKAKUクエスト｜称号「${titleText}」／特徴：${axisLabel} ${tags}`;
+      /* ================ 共有URL/画像 ================ */
+      function buildShareUrl(obj){
+        const json = JSON.stringify(obj);
+        const b64 = btoa(unescape(encodeURIComponent(json)))
+                    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        const base = location.origin + location.pathname.replace(/index\.html$/,'');
+        return `${base}?r=${b64}`;
       }
-      function getSiteUrl(){
-        return location.origin + location.pathname.replace(/index\.html$/, '');
+      function parseSharePayload(){
+        const m = location.search.match(/[?&]r=([^&]+)/);
+        if(!m) return null;
+        try{
+          const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/');
+          const pad = b64.length%4===2?'==':(b64.length%4===3?'=':'');
+          const json = decodeURIComponent(escape(atob(b64+pad)));
+          return JSON.parse(json);
+        }catch{ return null; }
       }
 
       async function buildShareImage({ titleText, axisLabel, leaning, radarCanvas, roleImgSrc }){
-        const W=1080, H=1080; // IG向け正方形
+        const W=1080, H=1080;
         const c = document.createElement('canvas'); c.width=W; c.height=H;
         const ctx = c.getContext('2d');
-
-        // 背景
         ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
 
-        // タイトル
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 56px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillText('KANKAKUクエスト', 60, 100);
         ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillText('あなたの感覚ジョブ診断', 60, 145);
 
-        // 枠
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 2;
-        roundRect(ctx, 60, 180, W-120, H-260, 24);
-        ctx.stroke();
+        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 2;
+        roundRect(ctx, 60, 180, W-120, H-260, 24); ctx.stroke();
 
-        // 称号
         ctx.font = 'bold 44px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillText(`称号：${titleText}`, 90, 250);
 
-        // 特徴
         ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillText(`特徴：${axisLabel}／傾向：${leaning}`, 90, 295);
 
-        // 役職画像（あれば）
         if(roleImgSrc){
           const roleImg = await loadImage(roleImgSrc);
           const roleBoxW = 360, roleBoxH = 360;
@@ -502,20 +624,15 @@
           ctx.drawImage(roleImg, roleX + (roleBoxW-riw)/2, roleY + (roleBoxH-rih)/2, riw, rih);
         }
 
-        // レーダーチャート合成
         const radarDataUrl = radarCanvas.toDataURL('image/png');
         const radarImg = await loadImage(radarDataUrl);
         const radarW=460, radarH=460, radarX=520, radarY=300;
         ctx.drawImage(radarImg, radarX, radarY, radarW, radarH);
 
-        // ハッシュタグ＆URL
         ctx.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillStyle = '#334155';
         ctx.fillText('#KANKAKUクエスト  #感覚過敏', 90, 730);
-        ctx.fillStyle = '#475569';
-        ctx.fillText(getSiteUrl(), 90, 770);
 
-        // フッター
         ctx.font = '20px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         ctx.fillStyle = '#64748b';
         ctx.fillText('by MANAKURO', 90, 1010);
@@ -523,6 +640,26 @@
         const blob = await new Promise(res => c.toBlob(b => res(b), 'image/png'));
         const url  = URL.createObjectURL(blob);
         return { blob, url };
+      }
+
+      async function shareOrDownloadImage(blob, filename, text){
+        const file = new File([blob], filename, {type:'image/png'});
+        if(navigator.canShare && navigator.canShare({ files:[file] })){
+          try{
+            await navigator.share({ files:[file], text });
+            return;
+          }catch(e){ /* キャンセル等は無視してDLにフォールバック */ }
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        try{
+          await navigator.clipboard.writeText(text);
+          alert('シェア用画像を保存しました。投稿文もコピー済みです。各SNSで画像を添付して貼り付けてください。');
+        }catch{
+          alert('シェア用画像を保存しました。投稿文は手動でコピーしてください。');
+        }
       }
 
       function roundRect(ctx, x, y, w, h, r){
@@ -540,28 +677,8 @@
       }
       function loadImage(src){
         return new Promise((ok, ng)=>{
-          const i = new Image(); i.onload=()=>ok(i); i.onerror=ng; i.src = src;
+          const i = new Image(); i.crossOrigin='anonymous'; i.onload=()=>ok(i); i.onerror=ng; i.src = src;
         });
-      }
-
-      async function shareOrDownloadImage(blob, filename, text){
-        const file = new File([blob], filename, {type:'image/png'});
-        if(navigator.canShare && navigator.canShare({ files:[file] })){
-          try{
-            await navigator.share({ files:[file], text });
-            return;
-          }catch(e){ /* キャンセル等は無視してDLにフォールバック */ }
-        }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a); a.click(); a.remove();
-        try{
-          await navigator.clipboard.writeText(text + '\n' + getSiteUrl());
-          alert('シェア用画像を保存しました。テキストもコピー済みです。Instagramや各SNSに貼り付けて投稿してください。');
-        }catch{
-          alert('シェア用画像を保存しました。必要ならテキストを手動でコピーしてください。');
-        }
       }
 
       function renderAxisFeedback(radar){
@@ -588,76 +705,29 @@
         }).join('');
       }
 
-      // ======= ロジック（判定の中立化を含む） =======
-      function pickQuestions(mode){
-        const count = MODE_MAP[mode];
-        const byAxis = Object.fromEntries(AXES.map(a=>[a.key,[]]));
-        BANK.forEach(q=>byAxis[q.axis].push(q));
-        const perAxisBase = Math.floor(count/AXES.length);
-        const remainder = count%AXES.length;
-        const out=[];
-        AXES.forEach((ax,i)=>{
-          const take = perAxisBase + (i<remainder?1:0);
-          const pool = byAxis[ax.key];
-          const hypers = pool.filter(q=>q.trait==='hyper');
-          const hypos  = pool.filter(q=>q.trait==='hypo');
-          let h=0,y=0;
-          for(let k=0;k<take;k++){
-            if(h<=y && h<hypers.length) out.push(hypers[h++]);
-            else if(y<hypos.length) out.push(hypos[y++]);
-            else if(h<hypers.length) out.push(hypers[h++]);
-          }
-        });
-        return out;
+      function renderLowOverallCard(){
+        return `
+          <div class="card">
+            <h3>今回のまとめ</h3>
+            <p class="muted">全体的に大きな偏りは見られませんでした。日によって「少し気になる」「今日は平気」など、ゆるやかな変化があるタイプかもしれません。</p>
+            <ul>
+              <li>困りごとが少ない時は、そのままの環境でOK</li>
+              <li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>
+              <li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>
+            </ul>
+          </div>
+        `;
       }
 
-      function calcScores(questions, answers){
-        const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
-        questions.forEach(q=>{
-          const v = answers[q.id];
-          if(v==null) return;
-          if(q.trait==='hyper'){sums[q.axis].h+=v; sums[q.axis].hc++;}
-          else {sums[q.axis].y+=v; sums[q.axis].yc++;}
-        });
-        const radar = AXES.map(ax=>{
-          const maxH = Math.max(1, sums[ax.key].hc*4);
-          const maxY = Math.max(1, sums[ax.key].yc*4);
-          const hyper = Math.round((sums[ax.key].h/maxH)*100);
-          const hypo  = Math.round((sums[ax.key].y/maxY)*100);
-          return { axis: ax.label, axisKey: ax.key, hyper, hypo };
-        });
-
-        const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
-        const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
-        const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
-        const diff     = Math.abs(hyperAvg - hypoAvg);
-        const EPS = 6;   // 傾向差のしきい値（%）
-        const LOW = 20;  // 低強度とみなす上限（%）
-
-        let overall;
-        if (maxAny <= LOW || diff <= EPS) {
-          overall = 'balanced';
-        } else {
-          overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
-        }
-
-        // 代表軸（balanced かつ低強度のときは null）
-        let dominantKey = null;
-        if (!(overall==='balanced' && maxAny<=LOW)) {
-          let best=-1;
-          radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
-        }
-
-        return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny };
-      }
-
-      // 初期表示（DOM構築後に実行） + 左上ロゴでトップへ
+      /* ================ 初期化（ロゴでトップ/共有リンク対応） ================ */
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
-        const home = document.getElementById('homeLink');
-        if (home) home.addEventListener('click', (e)=>{ e.preventDefault(); who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); });
-        renderStart();
+        document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); });
+
+        const payload = parseSharePayload();
+        if(payload) renderResultFromPayload(payload);
+        else renderStart();
       });
     </script>
   </body>
