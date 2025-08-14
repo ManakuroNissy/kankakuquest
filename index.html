@@ -20,8 +20,11 @@
       .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
-      .button.success{background:var(--good); color:#fff; border-color:transparent} /* 子どもボタンを緑 */
       .button[disabled]{opacity:.5; cursor:not-allowed}
+      /* ブランドカラーのシェアボタン */
+      .button.x  { background:#000;   color:#fff; border-color:#000 }
+      .button.fb { background:#1877F2; color:#fff; border-color:#1877F2 }
+      .button.x:hover,.button.fb:hover{filter:brightness(.95)}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
       .hero img{width:70%; max-width:800px; margin:0 auto; display:block} /* タイトル画像70% */
@@ -37,16 +40,13 @@
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
-      img.role{width:160px; height:auto; display:block; margin:8px auto 0}
+      /* 画像を1.5倍（160→240） */
+      img.role{width:240px; height:auto; display:block; margin:8px auto 0}
+      /* レベル表記を大きく */
+      .level-display{font-size:20px; font-weight:700; margin-top:6px}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
       .cta{background:#eff6ff; border:1px solid #bfdbfe}
       .start-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:12px}
-      .cta-grid{display:grid; gap:16px; align-items:start; grid-template-columns:1fr}
-      @media(min-width:900px){.cta-grid{grid-template-columns:280px 1fr}}
-      .seminar-banner{width:100%; height:auto; border-radius:12px; border:1px solid #bfdbfe}
-      .cta h3{margin:8px 0 10px}
-      .cta p{margin:8px 0}
-      .cta ul{margin:6px 0 0 1.2em}
       .share{display:grid; gap:10px; justify-items:center}
       .share .buttons{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
       .level-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
@@ -77,6 +77,7 @@
       /* ================= 設定 ================= */
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
+      const QUESTION_COUNT = 30; // しっかり相当：固定
 
       const IMAGES = {
         title: 'images/title-image.png',
@@ -135,33 +136,33 @@
       /* ================ 質問 ================ */
       const BANK = [
         // 聴覚
-        { id: 'h_h_1', axis: 'hearing', trait: 'hyper', child: '教室のざわざわがつらく、耳をふさぎたくなることがある', adult: '店内やオフィスのざわめきで集中が切れやすい' },
-        { id: 'h_h_2', axis: 'hearing', trait: 'hyper', child: '突然の大きな音に強くびっくりする', adult: 'アラームや工事音などの大きな音が強いストレスになる' },
-        { id: 'h_y_1', axis: 'hearing', trait: 'hypo',  child: '呼ばれても気づかず、何度も呼ばれることがある', adult: 'アナウンスや声に反応が遅れることがある' },
+        { id: 'h_h_1', axis: 'hearing', trait: 'hyper', adult: '店内やオフィスのざわめきで集中が切れやすい' },
+        { id: 'h_h_2', axis: 'hearing', trait: 'hyper', adult: 'アラームや工事音などの大きな音が強いストレスになる' },
+        { id: 'h_y_1', axis: 'hearing', trait: 'hypo',  adult: 'アナウンスや声に反応が遅れることがある' },
         // 視覚
-        { id: 'v_h_1', axis: 'vision', trait: 'hyper', child: '画面のちらつきや速い動きがしんどい', adult: '高コントラスト/ちらつきで疲労や頭痛が出やすい' },
-        { id: 'v_h_2', axis: 'vision', trait: 'hyper', child: '蛍光灯や日差しがまぶしくて目を細める', adult: '強い照明や画面光がつらく、遮光が欲しくなる' },
-        { id: 'v_y_1', axis: 'vision', trait: 'hypo',  child: '暗い場所が好き/暗くても平気で動ける', adult: '暗い場所でも困らないことが多い' },
+        { id: 'v_h_1', axis: 'vision', trait: 'hyper', adult: '高コントラスト/ちらつきで疲労や頭痛が出やすい' },
+        { id: 'v_h_2', axis: 'vision', trait: 'hyper', adult: '強い照明や画面光がつらく、遮光が欲しくなる' },
+        { id: 'v_y_1', axis: 'vision', trait: 'hypo',  adult: '暗い場所でも困らないことが多い' },
         // 触覚
-        { id: 't_h_1', axis: 'touch', trait: 'hyper', child: 'タグやチクチクする服が苦手', adult: 'ウール/化繊/タグなどの刺激が気になる' },
-        { id: 't_h_2', axis: 'touch', trait: 'hyper', child: '手が少し汚れただけでもすぐ拭きたくなる', adult: '手や衣服のベタつきが強いストレスになる' },
-        { id: 't_y_1', axis: 'touch', trait: 'hypo',  child: 'ぎゅっと抱きしめられると落ち着くことがある', adult: '圧刺激（加重ブランケット等）で落ち着くことがある' },
+        { id: 't_h_1', axis: 'touch', trait: 'hyper', adult: 'ウール/化繊/タグなどの刺激が気になる' },
+        { id: 't_h_2', axis: 'touch', trait: 'hyper', adult: '手や衣服のベタつきが強いストレスになる' },
+        { id: 't_y_1', axis: 'touch', trait: 'hypo',  adult: '圧刺激（加重ブランケット等）で落ち着くことがある' },
         // 嗅覚
-        { id: 's_h_1', axis: 'smell', trait: 'hyper', child: '柔軟剤や香水のにおいが気になって離れたくなる', adult: '香料や食品のにおいに敏感で避けたくなる' },
-        { id: 's_h_2', axis: 'smell', trait: 'hyper', child: '他の人が気づかないにおいを感じ取る', adult: '微かなにおいに気づいて集中が途切れやすい' },
-        { id: 's_y_1', axis: 'smell', trait: 'hypo',  child: 'においの強い食べ物でも平気', adult: '強いにおいでも平気なことが多い' },
+        { id: 's_h_1', axis: 'smell', trait: 'hyper', adult: '香料や食品のにおいに敏感で避けたくなる' },
+        { id: 's_h_2', axis: 'smell', trait: 'hyper', adult: '微かなにおいに気づいて集中が途切れやすい' },
+        { id: 's_y_1', axis: 'smell', trait: 'hypo',  adult: '強いにおいでも平気なことが多い' },
         // 味覚
-        { id: 'ta_h_1', axis: 'taste', trait: 'hyper', child: '食べられるものが限られがち（食感/香りが理由）', adult: '繊細な味の差を感じ取り、好みがはっきりしている' },
-        { id: 'ta_h_2', axis: 'taste', trait: 'hyper', child: '味や食感の変化に敏感', adult: '微妙な味の違いにすぐ気づく' },
-        { id: 'ta_y_1', axis: 'taste', trait: 'hypo',  child: '濃い味やスパイスの強い料理を好む', adult: '刺激の強い味を好みやすい' },
+        { id: 'ta_h_1', axis: 'taste', trait: 'hyper', adult: '繊細な味の差を感じ取り、好みがはっきりしている' },
+        { id: 'ta_h_2', axis: 'taste', trait: 'hyper', adult: '微妙な味の違いにすぐ気づく' },
+        { id: 'ta_y_1', axis: 'taste', trait: 'hypo',  adult: '刺激の強い味を好みやすい' },
         // 温度/痛み
-        { id: 'tp_h_1', axis: 'tempPain', trait: 'hyper', child: '暑さ/寒さに参りやすい（こまめな調整が必要）', adult: '室温や風の変化に敏感で不快になりやすい' },
-        { id: 'tp_h_2', axis: 'tempPain', trait: 'hyper', child: '小さな擦り傷でも強く痛がることがある', adult: '軽い痛み/違和感でも集中が途切れることがある' },
-        { id: 'tp_y_1', axis: 'tempPain', trait: 'hypo',  child: '暑さ寒さに鈍く、上着を忘れがち', adult: '温度変化に気づくのが遅れがち' },
+        { id: 'tp_h_1', axis: 'tempPain', trait: 'hyper', adult: '室温や風の変化に敏感で不快になりやすい' },
+        { id: 'tp_h_2', axis: 'tempPain', trait: 'hyper', adult: '軽い痛み/違和感でも集中が途切れることがある' },
+        { id: 'tp_y_1', axis: 'tempPain', trait: 'hypo',  adult: '温度変化に気づくのが遅れがち' },
         // 動き
-        { id: 'm_h_1', axis: 'movement', trait: 'hyper', child: '人混みや揺れる場所が苦手', adult: '満員電車やVRで酔いやすい' },
-        { id: 'm_h_2', axis: 'movement', trait: 'hyper', child: '突然の動きの変化が苦手', adult: '高速移動や急加速がしんどい' },
-        { id: 'm_y_1', axis: 'movement', trait: 'hypo',  child: 'クルクル回る/ジャンプなど強い刺激を求める', adult: '強い運動やスリルを求めがち' },
+        { id: 'm_h_1', axis: 'movement', trait: 'hyper', adult: '満員電車やVRで酔いやすい' },
+        { id: 'm_h_2', axis: 'movement', trait: 'hyper', adult: '高速移動や急加速がしんどい' },
+        { id: 'm_y_1', axis: 'movement', trait: 'hypo',  adult: '強い運動やスリルを求めがち' },
       ];
 
       const COMMENT_BOOK = {
@@ -195,36 +196,15 @@
         },
       };
 
-      // === 140字向けショート要約 ===
+      /* === 140字向けショート要約 === */
       const SHORT_SUMMARY = {
-        hearing: {
-          hyper: '小さな音を拾いやすい／大きな音がつらい',
-          hypo:  'にぎやかでも集中しやすい／呼びかけを見落としがち'
-        },
-        vision: {
-          hyper: '細部に気づく／強い光やちらつきが苦手',
-          hypo:  '暗所に強い／細かな変化は見落としやすい'
-        },
-        touch: {
-          hyper: '素材感に敏感／チクチクやベタつきが苦手',
-          hypo:  '圧刺激で落ち着く／小さなケガに気づきにくい'
-        },
-        smell: {
-          hyper: '香りの差に鋭い／混ざったにおいが苦手',
-          hypo:  '強いにおいも平気／危険なにおいに気づきにくい'
-        },
-        taste: {
-          hyper: '味の違いに敏感／食べられる幅が狭くなりがち',
-          hypo:  '刺激的な味が得意／塩分や辛味が多くなりがち'
-        },
-        tempPain: {
-          hyper: '変化を早く察知／気温や痛みで消耗しやすい',
-          hypo:  '環境にタフ／暑さ寒さに気づくのが遅れがち'
-        },
-        movement: {
-          hyper: '揺れに敏感／人混みや乗り物酔いが出やすい',
-          hypo:  'スピードに強い／安全確認が遅れがち'
-        },
+        hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい', hypo:'にぎやかでも集中しやすい／呼びかけを見落としがち' },
+        vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',       hypo:'暗所に強い／細かな変化は見落としやすい' },
+        touch:    { hyper:'素材感に敏感／チクチクやベタつきが苦手',       hypo:'圧刺激で落ち着く／小さなケガに気づきにくい' },
+        smell:    { hyper:'香りの差に鋭い／混ざったにおいが苦手',         hypo:'強いにおいも平気／危険なにおいに気づきにくい' },
+        taste:    { hyper:'味の違いに敏感／食べられる幅が狭くなりがち',   hypo:'刺激的な味が得意／塩分や辛味が多くなりがち' },
+        tempPain: { hyper:'変化を早く察知／気温や痛みで消耗しやすい',     hypo:'環境にタフ／暑さ寒さに気づくのが遅れがち' },
+        movement: { hyper:'揺れに敏感／人混みや乗り物酔いが出やすい',     hypo:'スピードに強い／安全確認が遅れがち' },
         balanced: '偏りは少なめ。感じ方は状況次第。'
       };
       function getShortSummary(overall, dominant){
@@ -234,31 +214,44 @@
       function baseURL(){
         return location.origin + location.pathname.replace(/index\.html$/,'');
       }
-      // 140字におさめる投稿文（超過時は段階的に短縮）
+
+      /* === 改行入り：140字に収める投稿文 === */
       function buildShortShareText({title, level, overall, dominant}){
         const url = baseURL();
-        const urlLen = 23; // X上のURL換算長
+        const urlLen = 23; // XのURL換算長
         const axis = AXES.find(a=>a.key===dominant)?.label || 'バランス型';
-        const head = `称号「${title}」Lv${String(level).padStart(2,'0')}｜`;
-        const body = (overall==='balanced')
+        const line1 = '感覚診断結果';
+        const line2 = `称号「${title}」 Lv${String(level).padStart(2,'0')}`;
+        const line3 = (overall==='balanced')
           ? getShortSummary(overall, dominant)
           : `いちばん強いのは「${axis}」。${getShortSummary(overall, dominant)}`;
-        const cta = ' やってみる▶ ';
-        const tag = ' #KANKAKUクエスト';
-        let text = head + body + cta + url + tag;
+        const line4 = 'やってみる▶ ' + url;
+        const tag  = ' #KANKAKUクエスト';
+        const nl = '\n';
+        let text = [line1, line2, line3, line4].join(nl) + tag;
 
+        // 140字内に調整（URLは固定長23として計算）
         const limit = 140;
-        const effLen = t => t.length - (url.length - urlLen); // URL固定長換算
-        if (effLen(text) > limit) text = head + body + ' ' + url + tag;
-        if (effLen(text) > limit) text = head + body + ' ' + url;
-        if (effLen(text) > limit) {
-          const shorter = (overall==='balanced')
-            ? '偏りは少なめ。感じ方は状況次第。'
-            : `最も強い「${axis}」。${getShortSummary(overall, dominant).split('／')[0]}`;
-          text = head + shorter + ' ' + url;
-        }
+        const effLen = t => t.length - (url.length - urlLen);
+        if (effLen(text) <= limit) return text;
+        // 1) ハッシュタグを外す
+        text = [line1, line2, line3, line4].join(nl);
+        if (effLen(text) <= limit) return text;
+        // 2) line3を短縮
+        const short3 = (overall==='balanced')
+          ? '偏りは少なめ。感じ方は状況次第。'
+          : `最も強い「${axis}」。${getShortSummary(overall, dominant).split('／')[0]}`;
+        text = [line1, line2, short3, line4].join(nl);
+        if (effLen(text) <= limit) return text;
+        // 3) さらに圧縮（axisのみ）
+        const tiny3 = (overall==='balanced') ? '偏りは少なめ。' : `最も強い「${axis}」。`;
+        text = [line1, line2, tiny3, line4].join(nl);
         return text;
       }
+
+      /* === 非線形ウェイト（1・2は軽め） === */
+      // 0→0.00 / 1→0.08 / 2→0.28 / 3→0.65 / 4→1.00
+      const LIKERT_WEIGHT = [0, 0.08, 0.28, 0.65, 1.00];
 
       const LIKERT = [
         { v:0, label:'まったくない' },
@@ -267,14 +260,9 @@
         { v:3, label:'よくある' },
         { v:4, label:'とても強い' },
       ];
-      const MODE_MAP = { easy:12, normal:18, deep:30 };
 
       /* ================ 状態 ================ */
-      let who = null;       // 'self' | 'child'
-      let phrasing = 'adult'; // 表現は固定（子ども向け言い回しは使わない）
-      let mode = null;      // 'easy'|'normal'|'deep'
       let qs = []; let answers = {}; let index = 0;
-
       const app = document.getElementById('app');
 
       /* ================ 画面 ================ */
@@ -288,37 +276,17 @@
                 簡単な質問に答えるだけで、聴覚・視覚・触覚・嗅覚・味覚・温度/痛み・<strong>動き</strong>の感じ方を見える化。<br>
                 最後にレーダーチャートとRPG風の称号が表示されます。
               </p>
-              <div class="small">※ これは医療的診断ではありません。日々の対話や工夫のきっかけとしてご活用ください。</div>
               <div class="start-actions">
-                <button class="button primary" id="startSelf">自分自身について調べる</button>
-                <button class="button success" id="startChild">子どもについて調べる</button>
+                <button class="button primary" id="startBtn">診断をスタート</button>
               </div>
             </div>
           </div>`;
-        document.getElementById('startSelf').onclick=()=>{who='self'; phrasing='adult'; renderMode();};
-        document.getElementById('startChild').onclick=()=>{who='child'; phrasing='adult'; renderMode();};
-        window.scrollTo({top:0, behavior:'smooth'});
-      }
-
-      function renderMode(){
-        app.innerHTML = `
-          <div class="card" style="text-align:center">
-            <h2>調べ方を選ぶ</h2>
-            <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
-            <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
-              <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
-              <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
-              <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
-            </div>
-          </div>`;
-        document.getElementById('mEasy').onclick=()=>{mode='easy'; startQuestions();};
-        document.getElementById('mNormal').onclick=()=>{mode='normal'; startQuestions();};
-        document.getElementById('mDeep').onclick=()=>{mode='deep'; startQuestions();};
+        document.getElementById('startBtn').onclick=()=>{ startQuestions(); };
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
       function startQuestions(){
-        qs = pickQuestions(mode);
+        qs = pickQuestions(QUESTION_COUNT);
         answers = {}; index = 0;
         renderQuestion();
       }
@@ -326,7 +294,6 @@
       function renderQuestion(){
         const total = qs.length;
         const q = qs[index];
-        const text = phrasing==='child'? q.child : q.adult;
         const answered = answers[q.id];
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
@@ -337,7 +304,7 @@
                 <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
                 <div class="small">${index+1} / ${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">${text}</div> <!-- 質問とボタンの間に余白 -->
+              <div style="font-size:18px; margin-bottom:20px">${q.adult}</div> <!-- 質問とボタンの間に余白 -->
               <div class="likert" id="likert"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
                 <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
@@ -388,7 +355,7 @@
         }
 
         let headNote = '';
-        if (overall === 'balanced' && maxAny <= 20) {
+        if (overall === 'balanced' && maxAny <= 25) {
           headNote = '今回は大きな偏りは見つかりませんでした。状況や体調によって感じ方がゆるやかに変わる、柔軟タイプかもしれません。';
         } else if (overall === 'balanced') {
           headNote = `大きな偏りはありませんでした。比較的「${AXES.find(a=>a.key===dominant)?.label ?? '—'}」が気になりやすいかもしれません。`;
@@ -403,7 +370,7 @@
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
-              <div class="small">${lvLabel}：<span style="font-weight:700">Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
+              <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
               </div>
@@ -416,22 +383,22 @@
               </div>
             </div>
 
-            ${ overall==='balanced' && maxAny<=20 ? renderLowOverallCard() : renderAxisFeedback(radar) }
+            ${ overall==='balanced' && maxAny<=25 ? renderLowOverallCard() : renderAxisFeedback(radar) }
 
             <div class="card share">
               <div style="font-weight:700;">結果をシェア</div>
               <div class="buttons">
-                <button id="shareXlink"  class="button">X でシェア</button>
-                <button id="shareFBlink" class="button">Facebook でシェア</button>
+                <button id="shareXlink"  class="button x">X でシェア</button>
+                <button id="shareFBlink" class="button fb">Facebook でシェア</button>
               </div>
               <div class="small muted" style="text-align:center">
-                140字の短い一文＋短いリンクで共有します。
+                改行入りの短文（140字以内）＋短いリンクで投稿します。
               </div>
               <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
             </div>
 
             <div class="card cta">
-              <div class="cta-grid">
+              <div style="display:grid; gap:16px; grid-template-columns:1fr; align-items:start">
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
                   <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
@@ -466,23 +433,20 @@
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
 
-        // 短文シェア
+        // シェア（改行入り140字）
         const shortText = buildShortShareText({
           title: titleObj.t, level, overall, dominant
         });
-
-        // X（テキスト＋短リンク）
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
           window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank');
         };
-        // Facebook（URLシェアのみ）
         document.getElementById('shareFBlink').onclick = () => {
           const u = encodeURIComponent(baseURL());
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
         };
 
-        document.getElementById('retryBtn').onclick = () => { who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); };
+        document.getElementById('retryBtn').onclick = () => { qs=[]; answers={}; index=0; renderStart(); };
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
@@ -501,8 +465,7 @@
       }
 
       /* ================ ロジック ================ */
-      function pickQuestions(mode){
-        const count = MODE_MAP[mode];
+      function pickQuestions(count){
         const byAxis = Object.fromEntries(AXES.map(a=>[a.key,[]]));
         BANK.forEach(q=>byAxis[q.axis].push(q));
         const perAxisBase = Math.floor(count/AXES.length);
@@ -526,32 +489,34 @@
       // パーセンテージ(0–100)→Lv(0–99)
       function pctToLv(p){ return Math.min(99, Math.max(0, Math.floor(p*0.99))); }
 
-      // スコア計算
+      // スコア計算（非線形ウェイト）
       function calcScores(questions, answers){
         const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
         questions.forEach(q=>{
           const v = answers[q.id];
           if(v==null) return;
-          if(q.trait==='hyper'){sums[q.axis].h+=v; sums[q.axis].hc++;}
-          else {sums[q.axis].y+=v; sums[q.axis].yc++;}
+          const w = LIKERT_WEIGHT[v] ?? 0; // 非線形
+          if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
+          else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
         });
+
         const radar = AXES.map(ax=>{
-          const maxH = Math.max(1, sums[ax.key].hc*4);
-          const maxY = Math.max(1, sums[ax.key].yc*4);
-          const hyper = Math.round((sums[ax.key].h/maxH)*100);
-          const hypo  = Math.round((sums[ax.key].y/maxY)*100);
+          const maxH = Math.max(1, sums[ax.key].hc * 1.0);
+          const maxY = Math.max(1, sums[ax.key].yc * 1.0);
+          const hyper = Math.round((sums[ax.key].h / maxH) * 100);
+          const hypo  = Math.round((sums[ax.key].y / maxY) * 100);
           return { axis: ax.label, axisKey: ax.key, hyper, hypo };
         });
 
         const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
         const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
         const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
-        const diff     = Math.abs(hyperAvg - hypoAvg);
-        const EPS = 6;   // 傾向差のしきい値（%）
-        const LOW = 20;  // 低強度
 
+        // バランス判定を少し広めに
+        const EPS = 6;   // 平均差のしきい値（%）
+        const LOW = 25;  // 低強度のしきい値
         let overall;
-        if (maxAny <= LOW || diff <= EPS) {
+        if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
           overall = 'balanced';
         } else {
           overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
@@ -561,7 +526,7 @@
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
-        // Lv計算（0–99）
+        // Lv計算
         const dom = radar.find(r=>r.axisKey===dominantKey);
         const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
@@ -611,7 +576,7 @@
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
-        document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); });
+        document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); qs=[]; answers={}; index=0; renderStart(); });
         renderStart();
       });
     </script>
