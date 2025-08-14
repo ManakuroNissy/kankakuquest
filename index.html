@@ -1,386 +1,387 @@
-import React, { useMemo, useState } from "react";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip } from "recharts";
-
-/**
- * KANKAKU テスターQ — プロトタイプ v0.3（復元版）
- * ① タイトル画面（画像を表示）
- * ② 自分/子ども の選択
- * ③ 簡単/普通/しっかり（12/18/30問）
- * ④ 結果：レーダーチャート＋軸別コメント（強み/苦手/対処法）＋セミナーCTA
- *
- * ▼ タイトル画像の反映方法
- *   1) 画像をプロジェクトの public 配下に保存（例: /public/title-kankaku-quest.png）
- *   2) 下の HERO_IMAGE_PATH にそのパスを指定
- *   3) もしくは、外部URLを直指定してもOK
- */
-
-const HERO_IMAGE_PATH = "/title-kankaku-quest.png"; // ← publicに画像を置いた場合の例
-
-const SEMINAR_DATE = "2025-08-23";
-const SEMINAR_URL = "https://example.com/kankaku-seminar-2025-08-23"; // ←本番URLに差し替え
-
-// 7軸
-const AXES = [
-  { key: "hearing", label: "聴覚" },
-  { key: "vision", label: "視覚" },
-  { key: "touch", label: "触覚" },
-  { key: "smell", label: "嗅覚" },
-  { key: "taste", label: "味覚" },
-  { key: "tempPain", label: "温度/痛み" },
-  { key: "movement", label: "動き" },
-] as const;
-
-type AxisKey = typeof AXES[number]["key"];
-
-type Q = {
-  id: string;
-  axis: AxisKey;
-  trait: "hyper" | "hypo"; // 過敏/鈍麻
-  textChild: string; // 子ども観察用
-  textAdult: string; // 本人/大人
-};
-
-// 質問バンク（簡略版 : 必要に応じて追加可能）
-const BANK: Q[] = [
-  // 聴覚
-  { id: "h_h_1", axis: "hearing", trait: "hyper", textChild: "教室のざわざわがつらく、耳をふさぎたくなることがある", textAdult: "店内やオフィスのざわめきで集中が切れやすい" },
-  { id: "h_h_2", axis: "hearing", trait: "hyper", textChild: "突然の大きな音に強くびっくりする", textAdult: "アラームや工事音などの大きな音が強いストレスになる" },
-  { id: "h_y_1", axis: "hearing", trait: "hypo", textChild: "呼ばれても気づかず、何度も呼ばれることがある", textAdult: "アナウンスや声が聞こえても反応が遅れることがある" },
-  // 視覚
-  { id: "v_h_1", axis: "vision", trait: "hyper", textChild: "蛍光灯や日差しがまぶしくて目を細める", textAdult: "強い照明や画面光がつらく、遮光が欲しくなる" },
-  { id: "v_h_2", axis: "vision", trait: "hyper", textChild: "画面のちらつきや速い動きがしんどい", textAdult: "高コントラスト/ちらつきで疲労や頭痛が出やすい" },
-  { id: "v_y_1", axis: "vision", trait: "hypo", textChild: "暗い場所が好き/暗くても平気で動ける", textAdult: "暗所でも不便を感じにくい" },
-  // 触覚
-  { id: "t_h_1", axis: "touch", trait: "hyper", textChild: "タグやチクチクする服が苦手", textAdult: "ウール/化繊/タグなどの刺激が気になる" },
-  { id: "t_h_2", axis: "touch", trait: "hyper", textChild: "手が少し汚れただけでもすぐ拭きたくなる", textAdult: "手や衣服のベタつきが強いストレスになる" },
-  { id: "t_y_1", axis: "touch", trait: "hypo", textChild: "ぎゅっと抱きしめられると落ち着くことがある", textAdult: "圧刺激（加重ブランケット等）で落ち着くことがある" },
-  // 嗅覚
-  { id: "s_h_1", axis: "smell", trait: "hyper", textChild: "柔軟剤や香水のにおいが気になって離れたくなる", textAdult: "香料/食品のにおいに敏感で避けたくなる" },
-  { id: "s_h_2", axis: "smell", trait: "hyper", textChild: "他の人が気づかないにおいを感じ取る", textAdult: "微かなにおいに気づいて集中が途切れやすい" },
-  { id: "s_y_1", axis: "smell", trait: "hypo", textChild: "においの強い食べ物でも平気", textAdult: "強いにおいに動じにくい" },
-  // 味覚
-  { id: "ta_h_1", axis: "taste", trait: "hyper", textChild: "食べられるものが限られがち（食感/香りが理由）", textAdult: "繊細な味の差を感じ取り、好みがはっきりしている" },
-  { id: "ta_h_2", axis: "taste", trait: "hyper", textChild: "味や食感の変化に敏感", textAdult: "微妙な味の違いにすぐ気づく" },
-  { id: "ta_y_1", axis: "taste", trait: "hypo", textChild: "濃い味やスパイスの強い料理を好む", textAdult: "刺激の強い味を好みやすい" },
-  // 温度/痛み
-  { id: "tp_h_1", axis: "tempPain", trait: "hyper", textChild: "暑さ/寒さに参りやすい（こまめな調整が必要）", textAdult: "室温や風の変化に敏感で不快になりやすい" },
-  { id: "tp_h_2", axis: "tempPain", trait: "hyper", textChild: "小さな擦り傷でも強く痛がることがある", textAdult: "軽い痛み/違和感でも集中が途切れることがある" },
-  { id: "tp_y_1", axis: "tempPain", trait: "hypo", textChild: "暑さ寒さに鈍く、上着を忘れがち", textAdult: "温度変化に気づくのが遅れがち" },
-  // 動き
-  { id: "m_h_1", axis: "movement", trait: "hyper", textChild: "人混みや揺れる場所が苦手", textAdult: "満員電車/VR等で酔いやすい" },
-  { id: "m_h_2", axis: "movement", trait: "hyper", textChild: "突然の動きの変化が苦手", textAdult: "高速移動や急加速がしんどい" },
-  { id: "m_y_1", axis: "movement", trait: "hypo", textChild: "クルクル回る/ジャンプなど強い刺激を求める", textAdult: "強い運動やスリルを求めがち" },
-];
-
-const MODE_MAP = { easy: 12, normal: 18, deep: 30 } as const;
-
-type ModeKey = keyof typeof MODE_MAP;
-
-type Who = "self" | "child";
-
-type AnswerMap = Record<string, number>; // 0-4
-
-function pickQuestions(mode: ModeKey) {
-  const count = MODE_MAP[mode];
-  const byAxis: Record<AxisKey, Q[]> = { hearing: [], vision: [], touch: [], smell: [], taste: [], tempPain: [], movement: [] } as any;
-  BANK.forEach((q) => byAxis[q.axis].push(q));
-  const perAxisBase = Math.floor(count / AXES.length);
-  const remainder = count % AXES.length;
-  const out: Q[] = [];
-  AXES.forEach((ax, i) => {
-    const take = perAxisBase + (i < remainder ? 1 : 0);
-    const pool = byAxis[ax.key];
-    const hypers = pool.filter((q) => q.trait === "hyper");
-    const hypos = pool.filter((q) => q.trait === "hypo");
-    let h = 0, y = 0;
-    for (let k = 0; k < take; k++) {
-      if (h <= y && h < hypers.length) out.push(hypers[h++]);
-      else if (y < hypos.length) out.push(hypos[y++]);
-      else if (h < hypers.length) out.push(hypers[h++]);
-    }
-  });
-  return out;
-}
-
-function calcScores(questions: Q[], answers: AnswerMap) {
-  const sums: Record<AxisKey, { h: number; y: number; hc: number; yc: number }> = {
-    hearing: { h: 0, y: 0, hc: 0, yc: 0 },
-    vision: { h: 0, y: 0, hc: 0, yc: 0 },
-    touch: { h: 0, y: 0, hc: 0, yc: 0 },
-    smell: { h: 0, y: 0, hc: 0, yc: 0 },
-    taste: { h: 0, y: 0, hc: 0, yc: 0 },
-    tempPain: { h: 0, y: 0, hc: 0, yc: 0 },
-    movement: { h: 0, y: 0, hc: 0, yc: 0 },
-  } as any;
-  questions.forEach((q) => {
-    const v = answers[q.id];
-    if (v === undefined) return;
-    if (q.trait === "hyper") { sums[q.axis].h += v; sums[q.axis].hc += 1; }
-    else { sums[q.axis].y += v; sums[q.axis].yc += 1; }
-  });
-  const data = AXES.map((ax) => {
-    const maxH = Math.max(1, sums[ax.key].hc * 4);
-    const maxY = Math.max(1, sums[ax.key].yc * 4);
-    const hyper = Math.round((sums[ax.key].h / maxH) * 100);
-    const hypo = Math.round((sums[ax.key].y / maxY) * 100);
-    return { axis: ax.label, axisKey: ax.key, 過敏: hyper, 鈍麻: hypo } as any;
-  });
-  const hyperAvg = Math.round(data.reduce((a, d) => a + d["過敏"], 0) / data.length);
-  const hypoAvg = Math.round(data.reduce((a, d) => a + d["鈍麻"], 0) / data.length);
-  let dominant: AxisKey = "hearing"; let best = -1;
-  data.forEach((d: any) => { const m = Math.max(d["過敏"], d["鈍麻"]); if (m > best) { best = m; dominant = d.axisKey; } });
-  return { radar: data, hyperAvg, hypoAvg, dominant };
-}
-
-// 軸別コメント
-const COMMENT_BOOK: Record<AxisKey, { hyper: { strong: string[]; challenge: string[]; tips: string[] }, hypo: { strong: string[]; challenge: string[]; tips: string[] } }> = {
-  hearing: {
-    hyper: { strong: ["微かな音の変化に気づける観察力"], challenge: ["人混みや大音量の場所で疲れやすい"], tips: ["ノイズキャンセリング/耳栓の活用", "静かな席や時間帯を選ぶ", "通知音量の微調整"] },
-    hypo: { strong: ["賑やかな環境でも集中しやすい"], challenge: ["呼びかけやアナウンスを聞き逃しやすい"], tips: ["バイブ/光での通知", "視覚サインの併用", "重要連絡は文字ベースで受け取る"] },
-  },
-  vision: {
-    hyper: { strong: ["細かな差異にすぐ気づける洞察力"], challenge: ["強い光/ちらつきで疲れやすい"], tips: ["遮光/偏光レンズ", "画面の明るさ/配色を調整", "紙面作業をこまめに挟む"] },
-    hypo: { strong: ["暗所で落ち着いて動ける"], challenge: ["細部の変化に気づきにくい"], tips: ["コントラスト強調", "要点のマーキング", "タスク前のチェックリスト"] },
-  },
-  touch: {
-    hyper: { strong: ["素材/肌触りへの審美眼"], challenge: ["タグ/チクチク/ベタつきがストレス"], tips: ["肌当たりの良い素材選び", "タグカット/裏返し着用", "ウェットティッシュ常備"] },
-    hypo: { strong: ["圧や重みで落ち着きやすい"], challenge: ["小さなケガや汚れに気づきにくい"], tips: ["定期的なボディチェック", "加重ブランケットの活用", "触覚入力のバランス"] },
-  },
-  smell: {
-    hyper: { strong: ["香りの違いを見分ける能力"], challenge: ["香料が混ざる場所が苦手"], tips: ["マスク/アロマでリセット", "換気の良い席を確保", "香り強い洗剤を避ける"] },
-    hypo: { strong: ["強い匂いにも冷静"], challenge: ["危険な臭いに気づきにくい"], tips: ["期限表示の確認習慣", "他者に確認を頼む", "におい以外の衛生指標を使う"] },
-  },
-  taste: {
-    hyper: { strong: ["味の違いを楽しむ繊細さ"], challenge: ["食べられる品目が限られやすい"], tips: ["食感/香り単位での置き換え", "調味/調理法の微調整", "小さな一歩の試食"] },
-    hypo: { strong: ["刺激的な味を楽しむ冒険心"], challenge: ["塩分/辛味の過剰に注意"], tips: ["栄養バランス表の活用", "味以外（温度/見た目）の満足要素を増やす", "医療的制限がある場合は専門家相談"] },
-  },
-  tempPain: {
-    hyper: { strong: ["体調変化の早期察知"], challenge: ["気温/痛みの変化で消耗しやすい"], tips: ["重ね着/冷温アイテム", "作業時間を短ブロック化", "こまめな休憩"] },
-    hypo: { strong: ["幅広い環境に適応できる"], challenge: ["熱中症/低体温に気づきにくい"], tips: ["タイマーで水分/休憩を促す", "活動ログで体調を可視化", "危険温度の客観指標を使う"] },
-  },
-  movement: {
-    hyper: { strong: ["バランス変化に敏感"], challenge: ["乗り物酔い/人混みがつらい"], tips: ["混雑回避ルート", "安定した姿勢/視点固定", "乗り物は前方/風通し良い席"] },
-    hypo: { strong: ["スリル/運動を楽しめる"], challenge: ["危険察知が遅れがち"], tips: ["安全ルールの事前確認", "プロテクターの使用", "段階的に刺激レベルを上げる"] },
-  },
-};
-
-const LIKERT = [
-  { v: 0, label: "まったくない" },
-  { v: 1, label: "すこし" },
-  { v: 2, label: "ときどき" },
-  { v: 3, label: "よくある" },
-  { v: 4, label: "とても強い" },
-];
-
-export default function KankakuTesterQ() {
-  const [who, setWho] = useState<Who | null>(null);
-  const [age, setAge] = useState<"child" | "adult">("adult");
-  const [mode, setMode] = useState<ModeKey | null>(null);
-  const [started, setStarted] = useState(false);
-  const [answers, setAnswers] = useState<AnswerMap>({});
-  const [index, setIndex] = useState(0);
-  const [finished, setFinished] = useState(false);
-
-  const questions = useMemo(() => {
-    if (!mode) return [] as Q[];
-    return pickQuestions(mode);
-  }, [mode]);
-
-  const total = questions.length;
-  const current = questions[index];
-  const progress = total ? Math.round((Object.keys(answers).length / total) * 100) : 0;
-
-  const onSelect = (qid: string, v: number) => setAnswers((p) => ({ ...p, [qid]: v }));
-  const canNext = current && answers[current.id] !== undefined;
-  const goNext = () => { if (!canNext) return; if (index + 1 < total) setIndex(index + 1); else setFinished(true); };
-  const goPrev = () => setIndex((i) => Math.max(0, i - 1));
-
-  const result = useMemo(() => {
-    if (!finished) return null;
-    return calcScores(questions, answers);
-  }, [finished]);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
-      <header className="sticky top-0 z-10 bg-white/70 backdrop-blur border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-slate-900 text-white grid place-items-center font-bold">Q</div>
-            <div className="text-base font-bold">KANKAKUクエスト</div>
-          </div>
-          <a href={SEMINAR_URL} target="_blank" className="text-sm px-3 py-1.5 rounded-full bg-blue-600 text-white hover:brightness-110">8/23 セミナーを見る</a>
-        </div>
-      </header>
-
-      {/* タイトル画面 */}
-      {!started && !who && (
-        <main className="max-w-5xl mx-auto px-4 py-8 grid gap-6">
-          <div className="bg-white rounded-2xl shadow p-0 overflow-hidden">
-            <img src={HERO_IMAGE_PATH} alt="KANKAKUクエスト" className="w-full object-cover" />
-          </div>
-          <div className="bg-white rounded-2xl shadow p-6 grid gap-3">
-            <h1 className="text-xl font-bold">あなたの感覚ジョブ診断</h1>
-            <p className="text-slate-600">簡単な質問に答えるだけで、聴覚・視覚・触覚・嗅覚・味覚・温度/痛み・動きの感じ方を見える化。最後にレーダーチャートとRPG風の称号が表示されます。</p>
-            <div className="text-sm text-slate-500">※ これは医療的診断ではありません。日々の対話や工夫のきっかけとしてご活用ください。</div>
-            <div className="pt-2">
-              <button onClick={() => setWho("self")} className="px-4 py-3 rounded-xl bg-slate-900 text-white mr-2">自分自身について調べる</button>
-              <button onClick={() => setWho("child")} className="px-4 py-3 rounded-xl border">子どもについて調べる</button>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* モード選択 */}
-      {who && !mode && (
-        <main className="max-w-5xl mx-auto px-4 py-8 grid gap-4">
-          <div className="bg-white rounded-2xl shadow p-6 grid gap-4">
-            <h2 className="text-lg font-bold mb-1">調べ方を選ぶ</h2>
-            <div className="grid md:grid-cols-3 gap-3">
-              <ModeCard title="簡単" desc="各軸2問（約2-3分）" onPick={() => { setMode("easy"); setStarted(true); }} />
-              <ModeCard title="普通" desc="各軸3問（約4-6分）" onPick={() => { setMode("normal"); setStarted(true); }} />
-              <ModeCard title="しっかり" desc="各軸4-5問（約7-10分）" onPick={() => { setMode("deep"); setStarted(true); }} />
-            </div>
-            {who === "self" ? (
-              <div className="text-sm text-slate-600">対象：大人/本人。必要に応じて子ども向けに切替可。</div>
-            ) : (
-              <div className="text-sm text-slate-600">対象：子どもの様子を観察して回答してください。</div>
-            )}
-            <div className="flex items-center gap-2 text-sm pt-2">
-              <span className="text-slate-600">言い回し：</span>
-              <button onClick={() => setAge("child")} className={`px-3 py-1.5 rounded-lg border ${age === "child" ? "bg-slate-900 text-white" : ""}`}>子ども向け表現</button>
-              <button onClick={() => setAge("adult")} className={`px-3 py-1.5 rounded-lg border ${age === "adult" ? "bg-slate-900 text-white" : ""}`}>大人向け表現</button>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* 質問画面 */}
-      {started && !finished && (
-        <main className="max-w-3xl mx-auto px-4 py-8 grid gap-4">
-          <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-slate-900" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="bg-white rounded-2xl shadow p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="font-bold">{AXES.find(a => a.key === current.axis)?.label} の質問</h3>
-              <div className="text-sm text-slate-500">{index + 1} / {total}</div>
-            </div>
-            <QuestionCard q={current} age={age} value={answers[current.id]} onSelect={(id, v) => setAnswers((p) => ({ ...p, [id]: v }))} />
-            <div className="pt-4 flex justify-between">
-              <button onClick={() => setIndex(i => Math.max(0, i - 1))} className="px-3 py-2 rounded-lg border">もどる</button>
-              <button onClick={goNext} disabled={!canNext} className={`px-4 py-2 rounded-lg ${canNext ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-500"}`}>つぎへ</button>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* 結果画面 */}
-      {finished && result && (
-        <main className="max-w-5xl mx-auto px-4 py-8 grid gap-6">
-          <div className="bg-white rounded-2xl shadow p-6 grid gap-4">
-            <h2 className="text-xl font-bold">結果</h2>
-            <div className="w-full h-72">
-              <ResponsiveContainer>
-                <RadarChart data={result.radar} outerRadius="80%">
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="axis" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                  <Radar name="過敏" dataKey="過敏" stroke="#1e293b" fill="#1e293b" fillOpacity={0.35} />
-                  <Radar name="鈍麻" dataKey="鈍麻" stroke="#60a5fa" fill="#60a5fa" fillOpacity={0.25} />
-                  <Legend />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <AxisFeedback radar={result.radar} />
-
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 grid gap-2">
-            <div className="text-sm text-blue-800">"あなたの感覚について、もっと深く知ってみませんか？"</div>
-            <div className="text-blue-900 font-semibold">専門家が解説！感覚過敏との付き合い方がわかるオンラインセミナー（{SEMINAR_DATE}）</div>
-            <div className="text-sm text-blue-900/80">あなたの結果に合わせておすすめの回をご案内します。</div>
-            <div className="pt-2">
-              <a href={SEMINAR_URL} target="_blank" className="inline-block px-4 py-2 rounded-xl bg-blue-600 text-white hover:brightness-110">申し込みページへ</a>
-            </div>
-          </div>
-        </main>
-      )}
-
-      <footer className="max-w-5xl mx-auto px-4 py-8 text-xs text-slate-500">
-        プライバシー：回答は端末内で処理され、同意なく保存されません。
-      </footer>
-    </div>
-  );
-}
-
-function ModeCard({ title, desc, onPick }: { title: string; desc: string; onPick: () => void }) {
-  return (
-    <button onClick={onPick} className="text-left bg-white rounded-2xl border hover:shadow p-4">
-      <div className="text-base font-bold">{title}</div>
-      <div className="text-sm text-slate-600">{desc}</div>
-    </button>
-  );
-}
-
-function QuestionCard({ q, age, value, onSelect }: { q: Q; age: "child" | "adult"; value: number | undefined; onSelect: (id: string, v: number) => void }) {
-  const label = age === "child" ? q.textChild : q.textAdult;
-  const ICONS: Record<AxisKey, string> = { hearing: "👂", vision: "👀", touch: "✋", smell: "👃", taste: "👅", tempPain: "🌡️", movement: "🎢" };
-  return (
-    <div>
-      <div className="flex items-center gap-3 mb-3">
-        <div className="text-2xl" aria-hidden>{ICONS[q.axis]}</div>
-        <div className="text-lg">{label}</div>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KANKAKUクエスト — あなたの感覚ジョブ診断</title>
+    <!-- Chart.js（レーダーチャート用：CDN） -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+      :root{
+        --bg:#f7f8fb; --card:#fff; --ink:#0f172a; --muted:#616b7c; --brand:#2563eb; --brand2:#0f172a;
+        --ring:#e5e7eb; --good:#16a34a; --warn:#ea580c;
+      }
+      *{box-sizing:border-box}
+      body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:linear-gradient(#f7f8fb,#fff)}
+      .container{max-width:960px; margin:0 auto; padding:16px}
+      header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
+      header .bar{display:flex; align-items:center; justify-content:space-between; padding:10px 16px}
+      .brand{display:flex; gap:10px; align-items:center}
+      .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
+      .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
+      .button.primary{background:var(--brand); color:#fff; border-color:transparent}
+      .button[disabled]{opacity:.5; cursor:not-allowed}
+      .grid{display:grid; gap:16px}
+      .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
+      .hero img{width:100%; display:block}
+      .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
+      .progress > div{height:100%; background:var(--brand2)}
+      .likert{display:flex; flex-wrap:wrap; gap:8px}
+      .likert button{padding:8px 12px; border:1px solid var(--ring); border-radius:12px; background:#fff}
+      .likert button.active{background:var(--brand2); color:#fff; border-color:transparent}
+      .cols{display:grid; gap:16px}
+      @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
+      .small{font-size:12px; color:#475569}
+      .muted{color:var(--muted)}
+      .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
+      .center{text-align:center}
+      img.role{width:160px; height:auto; display:block; margin:8px auto 0}
+      footer{color:#6b7280; font-size:12px; padding:24px 16px}
+      .cta{background:#eff6ff; border:1px solid #bfdbfe}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar container">
+        <div class="brand"><div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div></div>
+        <a id="seminarBtnTop" class="button primary" target="_blank" href="#">8/23 セミナーを見る</a>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {LIKERT.map((o) => (
-          <button key={o.v} onClick={() => onSelect(q.id, o.v)} className={`px-3 py-2 rounded-xl border ${value === o.v ? "bg-slate-900 text-white" : ""}`}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
+    </header>
 
-function AxisFeedback({ radar }: { radar: any[] }) {
-  const scored = radar.map((d) => ({ key: d.axisKey, label: d.axis, hyper: d["過敏"], hypo: d["鈍麻"] }));
-  const picks = scored.filter((s) => Math.max(s.hyper, s.hypo) >= 60)
-    .sort((a, b) => Math.max(b.hyper, b.hypo) - Math.max(a.hyper, a.hypo));
-  const list = (picks.length ? picks : scored.sort((a, b) => Math.max(b.hyper, b.hypo) - Math.max(a.hyper, a.hypo)).slice(0, 3));
+    <main id="app" class="container"></main>
 
-  return (
-    <section className="grid gap-4">
-      {list.map((s) => (
-        <div key={s.key} className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-lg font-bold mb-1">{s.label}</h3>
-          <div className="text-sm text-slate-600 mb-3">過敏:{s.hyper}% / 鈍麻:{s.hypo}%</div>
-          <FeedbackBody axis={s.key as AxisKey} hyper={s.hyper} hypo={s.hypo} />
-        </div>
-      ))}
-    </section>
-  );
-}
+    <footer class="container">
+      プライバシー：回答は端末内で処理され、同意なく保存されません。
+    </footer>
 
-function FeedbackBody({ axis, hyper, hypo }: { axis: AxisKey; hyper: number; hypo: number }) {
-  const mode: "hyper" | "hypo" | "mix" = hyper > hypo ? "hyper" : hypo > hyper ? "hypo" : "mix";
-  const book = COMMENT_BOOK[axis];
-  const strong = mode === "mix" ? [...book.hyper.strong, ...book.hypo.strong].slice(0, 2) : book[mode].strong;
-  const challenge = mode === "mix" ? [...book.hyper.challenge, ...book.hypo.challenge].slice(0, 2) : book[mode].challenge;
-  const tips = mode === "mix" ? [...book.hyper.tips, ...book.hypo.tips].slice(0, 3) : book[mode].tips;
+    <script>
+      // ============ 設定 ============
+      const SEMINAR_DATE = '2025-08-23';
+      const SEMINAR_URL = 'https://example.com/kankaku-seminar'; // ←本番URLに差し替え
+      document.getElementById('seminarBtnTop').href = SEMINAR_URL;
 
-  return (
-    <div className="grid md:grid-cols-3 gap-4 text-sm">
-      <div>
-        <div className="font-semibold mb-1">得意なこと（強み）</div>
-        <ul className="list-disc pl-5 text-slate-700">{strong.map((t, i) => <li key={i}>{t}</li>)}</ul>
-      </div>
-      <div>
-        <div className="font-semibold mb-1">苦手になりやすいこと</div>
-        <ul className="list-disc pl-5 text-slate-700">{challenge.map((t, i) => <li key={i}>{t}</li>)}</ul>
-      </div>
-      <div>
-        <div className="font-semibold mb-1">対処法のヒント</div>
-        <ul className="list-disc pl-5 text-slate-700">{tips.map((t, i) => <li key={i}>{t}</li>)}</ul>
-      </div>
-    </div>
-  );
-}
+      // 画像パス（GitHub Pagesのブランチ公開でも相対パスでOK）
+      const IMAGES = {
+        title: 'images/title-image.png',
+        roles: {
+          hearing: 'images/job-elf-scout.png',
+          vision: 'images/job-wizard.png',
+          touch: 'images/job-guardian.png',
+          smell: 'images/job-poison-appraiser.png',
+          taste: 'images/job-gourmet.png',
+          tempPain: 'images/job-weather-mage.png',
+          movement: 'images/job-knight.png'
+        }
+      };
+
+      // 役職ネーミング（過敏/鈍麻）
+      const TITLES = {
+        hyper: {
+          hearing: { t: 'エルフ耳の斥候（スカウト）', role: 'スカウト' },
+          vision: { t: '洞察の魔法使い（メイジ）', role: 'メイジ' },
+          touch: { t: '結界の守護者（ガーディアン）', role: 'ガーディアン' },
+          smell: { t: '毒の鑑定士（アルケミスト）', role: 'アルケミスト' },
+          taste: { t: '美食の王子／姫（グルメ）', role: 'グルメ' },
+          tempPain: { t: '気候予報士（メイジ）', role: 'メイジ' },
+          movement: { t: '揺れセンサー搭載者（ナイト）', role: 'ナイト' },
+        },
+        hypo: {
+          hearing: { t: '鉄壁の鼓膜', role: 'レンジャー' },
+          vision: { t: '闇夜の潜行者', role: 'ローグ' },
+          touch: { t: '鋼の肌感', role: 'ナイト' },
+          smell: { t: '香辛料の勇者', role: 'アルケミスト' },
+          taste: { t: '激辛の友', role: 'レンジャー' },
+          tempPain: { t: '季節と握手する人', role: 'レンジャー' },
+          movement: { t: 'スリルハンター', role: 'レンジャー' },
+        },
+      };
+
+      // 7軸
+      const AXES = [
+        { key: 'hearing', label: '聴覚' },
+        { key: 'vision', label: '視覚' },
+        { key: 'touch', label: '触覚' },
+        { key: 'smell', label: '嗅覚' },
+        { key: 'taste', label: '味覚' },
+        { key: 'tempPain', label: '温度/痛み' },
+        { key: 'movement', label: '動き' },
+      ];
+
+      // 質問バンク（子ども/大人の言い回し両方）
+      const BANK = [
+        // 聴覚
+        { id: 'h_h_1', axis: 'hearing', trait: 'hyper', child: '教室のざわざわがつらく、耳をふさぎたくなることがある', adult: '店内やオフィスのざわめきで集中が切れやすい' },
+        { id: 'h_h_2', axis: 'hearing', trait: 'hyper', child: '突然の大きな音に強くびっくりする', adult: 'アラームや工事音などの大きな音が強いストレスになる' },
+        { id: 'h_y_1', axis: 'hearing', trait: 'hypo',  child: '呼ばれても気づかず、何度も呼ばれることがある', adult: 'アナウンスや声が聞こえても反応が遅れることがある' },
+        // 視覚
+        { id: 'v_h_1', axis: 'vision', trait: 'hyper', child: '蛍光灯や日差しがまぶしくて目を細める', adult: '強い照明や画面光がつらく、遮光が欲しくなる' },
+        { id: 'v_h_2', axis: 'vision', trait: 'hyper', child: '画面のちらつきや速い動きがしんどい', adult: '高コントラスト/ちらつきで疲労や頭痛が出やすい' },
+        { id: 'v_y_1', axis: 'vision', trait: 'hypo',  child: '暗い場所が好き/暗くても平気で動ける', adult: '暗所でも不便を感じにくい' },
+        // 触覚
+        { id: 't_h_1', axis: 'touch', trait: 'hyper', child: 'タグやチクチクする服が苦手', adult: 'ウール/化繊/タグなどの刺激が気になる' },
+        { id: 't_h_2', axis: 'touch', trait: 'hyper', child: '手が少し汚れただけでもすぐ拭きたくなる', adult: '手や衣服のベタつきが強いストレスになる' },
+        { id: 't_y_1', axis: 'touch', trait: 'hypo',  child: 'ぎゅっと抱きしめられると落ち着くことがある', adult: '圧刺激（加重ブランケット等）で落ち着くことがある' },
+        // 嗅覚
+        { id: 's_h_1', axis: 'smell', trait: 'hyper', child: '柔軟剤や香水のにおいが気になって離れたくなる', adult: '香料/食品のにおいに敏感で避けたくなる' },
+        { id: 's_h_2', axis: 'smell', trait: 'hyper', child: '他の人が気づかないにおいを感じ取る', adult: '微かなにおいに気づいて集中が途切れやすい' },
+        { id: 's_y_1', axis: 'smell', trait: 'hypo',  child: 'においの強い食べ物でも平気', adult: '強いにおいに動じにくい' },
+        // 味覚
+        { id: 'ta_h_1', axis: 'taste', trait: 'hyper', child: '食べられるものが限られがち（食感/香りが理由）', adult: '繊細な味の差を感じ取り、好みがはっきりしている' },
+        { id: 'ta_h_2', axis: 'taste', trait: 'hyper', child: '味や食感の変化に敏感', adult: '微妙な味の違いにすぐ気づく' },
+        { id: 'ta_y_1', axis: 'taste', trait: 'hypo',  child: '濃い味やスパイスの強い料理を好む', adult: '刺激の強い味を好みやすい' },
+        // 温度/痛み
+        { id: 'tp_h_1', axis: 'tempPain', trait: 'hyper', child: '暑さ/寒さに参りやすい（こまめな調整が必要）', adult: '室温や風の変化に敏感で不快になりやすい' },
+        { id: 'tp_h_2', axis: 'tempPain', trait: 'hyper', child: '小さな擦り傷でも強く痛がることがある', adult: '軽い痛み/違和感でも集中が途切れることがある' },
+        { id: 'tp_y_1', axis: 'tempPain', trait: 'hypo',  child: '暑さ寒さに鈍く、上着を忘れがち', adult: '温度変化に気づくのが遅れがち' },
+        // 動き
+        { id: 'm_h_1', axis: 'movement', trait: 'hyper', child: '人混みや揺れる場所が苦手', adult: '満員電車/VR等で酔いやすい' },
+        { id: 'm_h_2', axis: 'movement', trait: 'hyper', child: '突然の動きの変化が苦手', adult: '高速移動や急加速がしんどい' },
+        { id: 'm_y_1', axis: 'movement', trait: 'hypo',  child: 'クルクル回る/ジャンプなど強い刺激を求める', adult: '強い運動やスリルを求めがち' },
+      ];
+
+      const COMMENT_BOOK = {
+        hearing: {
+          hyper: { strong:['微かな音の変化に気づける観察力'], challenge:['人混みや大音量の場所で疲れやすい'], tips:['ノイズキャンセリング/耳栓の活用','静かな席や時間帯を選ぶ','通知音量の微調整'] },
+          hypo:  { strong:['賑やかな環境でも集中しやすい'], challenge:['呼びかけやアナウンスを聞き逃しやすい'], tips:['バイブ/光での通知','視覚サインの併用','重要連絡は文字ベースで受け取る'] }
+        },
+        vision: {
+          hyper: { strong:['細かな差異にすぐ気づける洞察力'], challenge:['強い光/ちらつきで疲れやすい'], tips:['遮光/偏光レンズ','画面の明るさ/配色を調整','紙面作業をこまめに挟む'] },
+          hypo:  { strong:['暗所で落ち着いて動ける'], challenge:['細部の変化に気づきにくい'], tips:['コントラスト強調','要点のマーキング','タスク前のチェックリスト'] }
+        },
+        touch: {
+          hyper: { strong:['素材/肌触りへの審美眼'], challenge:['タグ/チクチク/ベタつきがストレス'], tips:['肌当たりの良い素材選び','タグカット/裏返し着用','ウェットティッシュ常備'] },
+          hypo:  { strong:['圧や重みで落ち着きやすい'], challenge:['小さなケガや汚れに気づきにくい'], tips:['定期的なボディチェック','加重ブランケットの活用','触覚入力のバランス'] }
+        },
+        smell: {
+          hyper: { strong:['香りの違いを見分ける能力'], challenge:['香料が混ざる場所が苦手'], tips:['マスク/アロマでリセット','換気の良い席を確保','香り強い洗剤を避ける'] },
+          hypo:  { strong:['強い匂いにも冷静'], challenge:['危険な臭いに気づきにくい'], tips:['期限表示の確認習慣','他者に確認を頼む','におい以外の衛生指標を使う'] }
+        },
+        taste: {
+          hyper: { strong:['味の違いを楽しむ繊細さ'], challenge:['食べられる品目が限られやすい'], tips:['食感/香り単位での置き換え','調味/調理法の微調整','小さな一歩の試食'] },
+          hypo:  { strong:['刺激的な味を楽しむ冒険心'], challenge:['塩分/辛味の過剰に注意'], tips:['栄養バランス表の活用','味以外（温度/見た目）の満足要素を増やす','医療的制限がある場合は専門家相談'] }
+        },
+        tempPain: {
+          hyper: { strong:['体調変化の早期察知'], challenge:['気温/痛みの変化で消耗しやすい'], tips:['重ね着/冷温アイテム','作業時間を短ブロック化','こまめな休憩'] },
+          hypo:  { strong:['幅広い環境に適応できる'], challenge:['熱中症/低体温に気づきにくい'], tips:['タイマーで水分/休憩を促す','活動ログで体調を可視化','危険温度の客観指標を使う'] }
+        },
+        movement: {
+          hyper: { strong:['バランス変化に敏感'], challenge:['乗り物酔い/人混みがつらい'], tips:['混雑回避ルート','安定した姿勢/視点固定','乗り物は前方/風通し良い席'] },
+          hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
+        },
+      };
+
+      const LIKERT = [
+        { v:0, label:'まったくない' },
+        { v:1, label:'すこし' },
+        { v:2, label:'ときどき' },
+        { v:3, label:'よくある' },
+        { v:4, label:'とても強い' },
+      ];
+
+      const MODE_MAP = { easy:12, normal:18, deep:30 };
+
+      // ======= 状態 =======
+      let who = null; // 'self' | 'child'
+      let phrasing = 'adult'; // 表現：'adult' | 'child'
+      let mode = null; // 'easy'|'normal'|'deep'
+      let qs = []; // 質問配列
+      let answers = {}; // {qid:number}
+      let index = 0;
+
+      const app = document.getElementById('app');
+
+      // ======= 画面レンダ =======
+      function renderStart(){
+        app.innerHTML = `
+          <div class="grid">
+            <div class="card hero"><img src="${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
+            <div class="card">
+              <h1>あなたの感覚ジョブ診断</h1>
+              <p class="muted">簡単な質問に答えるだけで、聴覚・視覚・触覚・嗅覚・味覚・温度/痛み・動きの感じ方を見える化。最後にレーダーチャートとRPG風の称号が表示されます。</p>
+              <div class="small">※ これは医療的診断ではありません。日々の対話や工夫のきっかけとしてご活用ください。</div>
+              <div style="margin-top:12px">
+                <button class="button primary" id="startSelf">自分自身について調べる</button>
+                <button class="button" id="startChild">子どもについて調べる</button>
+              </div>
+            </div>
+          </div>`;
+        document.getElementById('startSelf').onclick=()=>{who='self'; phrasing='adult'; renderMode();};
+        document.getElementById('startChild').onclick=()=>{who='child'; phrasing='child'; renderMode();};
+      }
+
+      function renderMode(){
+        app.innerHTML = `
+          <div class="card">
+            <h2>調べ方を選ぶ</h2>
+            <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
+            <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
+              <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
+              <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
+              <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
+            </div>
+            <div style="margin-top:12px" class="small">言い回し：
+              <button class="button" id="sayChild">子ども向け表現</button>
+              <button class="button" id="sayAdult">大人向け表現</button>
+            </div>
+          </div>`;
+        document.getElementById('mEasy').onclick=()=>{mode='easy'; startQuestions();};
+        document.getElementById('mNormal').onclick=()=>{mode='normal'; startQuestions();};
+        document.getElementById('mDeep').onclick=()=>{mode='deep'; startQuestions();};
+        document.getElementById('sayChild').onclick=()=>{phrasing='child';};
+        document.getElementById('sayAdult').onclick=()=>{phrasing='adult';};
+      }
+
+      function startQuestions(){
+        qs = pickQuestions(mode);
+        answers = {}; index = 0;
+        renderQuestion();
+      }
+
+      function renderQuestion(){
+        const total = qs.length;
+        const q = qs[index];
+        const text = phrasing==='child'? q.child : q.adult;
+        const answered = answers[q.id];
+        const progress = Math.round(Object.keys(answers).length/total*100);
+        app.innerHTML = `
+          <div class="grid">
+            <div class="progress"><div style="width:${progress}%"></div></div>
+            <div class="card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+                <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
+                <div class="small">${index+1} / ${total}</div>
+              </div>
+              <div style="font-size:18px; margin-bottom:8px">${text}</div>
+              <div class="likert" id="likert"></div>
+              <div style="display:flex; justify-content:space-between; margin-top:12px">
+                <button class="button" id="prevBtn">もどる</button>
+                <button class="button primary" id="nextBtn" ${answered==null? 'disabled':''}>つぎへ</button>
+              </div>
+            </div>
+          </div>`;
+        const wrap = document.getElementById('likert');
+        LIKERT.forEach(o=>{
+          const btn = document.createElement('button');
+          btn.textContent = o.label; btn.className='';
+          if(answered===o.v) btn.classList.add('active');
+          btn.onclick=()=>{answers[q.id]=o.v; renderQuestion();};
+          btn.classList.add('button'); if(answered===o.v) btn.classList.add('active');
+          wrap.appendChild(btn);
+        });
+        document.getElementById('prevBtn').onclick=()=>{ index=Math.max(0,index-1); renderQuestion(); };
+        document.getElementById('nextBtn').onclick=()=>{
+          if(index+1 < total){ index++; renderQuestion(); } else { renderResult(); }
+        };
+      }
+
+      function renderResult(){
+        const {radar, hyperAvg, hypoAvg, dominant} = calcScores(qs, answers);
+        const leaning = hyperAvg >= hypoAvg ? 'hyper':'hypo';
+        const title = TITLES[leaning][dominant];
+        const axisLabel = AXES.find(a=>a.key===dominant).label;
+        const roleImg = IMAGES.roles[dominant];
+
+        app.innerHTML = `
+          <div class="grid">
+            <div class="card center">
+              <h2>結果</h2>
+              <div class="muted">いちばん特徴が強く出たのは「${axisLabel}」。全体としては<strong>${leaning==='hyper'?'過敏':'鈍麻'}</strong>の傾向が少し高めでした。</div>
+              <img class="role" src="${roleImg}" alt="${title.t}">
+              <div style="font-weight:700; margin-top:6px">称号：${title.t}</div>
+              <div class="small">ジョブ：${title.role}</div>
+              <div style="height:360px; margin-top:12px"><canvas id="radar"></canvas></div>
+            </div>
+
+            ${renderAxisFeedback(radar)}
+
+            <div class="card cta">
+              <div class="small" style="color:#1e3a8a">「あなたの感覚について、もっと深く知ってみませんか？」</div>
+              <div style="font-weight:700; color:#1e3a8a">専門家が解説！感覚過敏との付き合い方がわかるオンラインセミナー（${SEMINAR_DATE}）</div>
+              <div class="small" style="color:#1e40af">称号「${title.t}」のあなたにおすすめの回です。</div>
+              <div style="margin-top:8px"><a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページへ</a></div>
+            </div>
+          </div>`;
+
+        // チャート描画
+        const ctx = document.getElementById('radar');
+        new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: radar.map(d=>d.axis),
+            datasets: [
+              { label:'過敏', data: radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
+              { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
+            ]
+          },
+          options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
+        });
+      }
+
+      function renderAxisFeedback(radar){
+        const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
+        const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
+                            .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
+        const list = (picks.length? picks: scored.sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo)).slice(0,3));
+        return list.map(s=>{
+          const mode = s.hyper> s.hypo ? 'hyper' : (s.hypo> s.hyper? 'hypo':'mix');
+          const book = COMMENT_BOOK[s.key];
+          const strong = mode==='mix'? [...book.hyper.strong,...book.hypo.strong].slice(0,2) : book[mode].strong;
+          const challenge = mode==='mix'? [...book.hyper.challenge,...book.hypo.challenge].slice(0,2) : book[mode].challenge;
+          const tips = mode==='mix'? [...book.hyper.tips,...book.hypo.tips].slice(0,3) : book[mode].tips;
+          return `
+            <div class="card">
+              <h3>${s.label}</h3>
+              <div class="small muted">過敏:${s.hyper}% / 鈍麻:${s.hypo}%</div>
+              <div class="cols" style="margin-top:8px">
+                <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>${strong.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>${challenge.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // ======= ロジック =======
+      function pickQuestions(mode){
+        const count = MODE_MAP[mode];
+        const byAxis = Object.fromEntries(AXES.map(a=>[a.key,[]]));
+        BANK.forEach(q=>byAxis[q.axis].push(q));
+        const perAxisBase = Math.floor(count/AXES.length);
+        const remainder = count%AXES.length;
+        const out=[];
+        AXES.forEach((ax,i)=>{
+          const take = perAxisBase + (i<remainder?1:0);
+          const pool = byAxis[ax.key];
+          const hypers = pool.filter(q=>q.trait==='hyper');
+          const hypos = pool.filter(q=>q.trait==='hypo');
+          let h=0,y=0;
+          for(let k=0;k<take;k++){
+            if(h<=y && h<hypers.length) out.push(hypers[h++]);
+            else if(y<hypos.length) out.push(hypos[y++]);
+            else if(h<hypers.length) out.push(hypers[h++]);
+          }
+        });
+        return out;
+      }
+
+      function calcScores(questions, answers){
+        const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
+        questions.forEach(q=>{ const v = answers[q.id]; if(v==null) return; if(q.trait==='hyper'){sums[q.axis].h+=v; sums[q.axis].hc++;} else {sums[q.axis].y+=v; sums[q.axis].yc++;} });
+        const radar = AXES.map(ax=>{
+          const maxH = Math.max(1, sums[ax.key].hc*4);
+          const maxY = Math.max(1, sums[ax.key].yc*4);
+          const hyper = Math.round((sums[ax.key].h/maxH)*100);
+          const hypo  = Math.round((sums[ax.key].y/maxY)*100);
+          return { axis: ax.label, axisKey: ax.key, hyper, hypo };
+        });
+        const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
+        const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
+        let dominant = AXES[0].key, best=-1; radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominant=d.axisKey;} });
+        return { radar, hyperAvg, hypoAvg, dominant };
+      }
+
+      // 初期表示
+      renderStart();
+    </script>
+  </body>
+</html>
