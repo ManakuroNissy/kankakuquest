@@ -224,28 +224,23 @@
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-      function renderMode(){
-        app.innerHTML = `
-          <div class="card" style="text-align:center">
-            <h2>調べ方を選ぶ</h2>
-            <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
-            <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
-              <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
-              <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
-              <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
-            </div>
-            <div style="margin-top:12px" class="small">言い回し：
-              <button class="button" id="sayChild">子ども向け表現</button>
-              <button class="button" id="sayAdult">大人向け表現</button>
-            </div>
-          </div>`;
-        document.getElementById('mEasy').onclick=()=>{mode='easy'; startQuestions();};
-        document.getElementById('mNormal').onclick=()=>{mode='normal'; startQuestions();};
-        document.getElementById('mDeep').onclick=()=>{mode='deep'; startQuestions();};
-        document.getElementById('sayChild').onclick=()=>{phrasing='child';};
-        document.getElementById('sayAdult').onclick=()=>{phrasing='adult';};
-        window.scrollTo({top:0, behavior:'smooth'});
-      }
+function renderMode(){
+  app.innerHTML = `
+    <div class="card" style="text-align:center">
+      <h2>調べ方を選ぶ</h2>
+      <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
+      <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
+        <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
+        <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
+        <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
+      </div>
+    </div>`;
+  document.getElementById('mEasy').onclick   = ()=>{ mode='easy';   startQuestions(); };
+  document.getElementById('mNormal').onclick = ()=>{ mode='normal'; startQuestions(); };
+  document.getElementById('mDeep').onclick   = ()=>{ mode='deep';   startQuestions(); };
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
 
       function startQuestions(){
         qs = pickQuestions(mode);
