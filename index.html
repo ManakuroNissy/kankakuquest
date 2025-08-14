@@ -89,6 +89,7 @@
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
       const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2（固定28問）
+      const DUAL_THRESHOLD = 70; // 両極端（dual）判定のしきい値（%）
 
       const IMAGES = {
         title: 'images/title-image.png',
@@ -110,7 +111,8 @@
           tempPain:  'images/job-tempPain-hypo.png',
           movement:  'images/job-movement-hypo.png'
         },
-        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー
+        balanced: 'images/job-nomal.png', // バランス型
+        dual:     'images/job-dualblade.png' // 両極端：双剣士（差し替え可）
       };
 
       const TITLES = {
@@ -132,6 +134,9 @@
           tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
           movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
         },
+        dual: { // 両極端専用
+          any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' }
+        }
       };
 
       /* ▼▼ SNS用：役職コメント（50字内トリム用に使用） ▼▼ */
@@ -154,6 +159,7 @@
           tempPain: '気候変化にタフなノマド。暑さ寒さに振り回されにくい。',
           movement: '回転や加速も面白がる空の戦士。スピードの相棒。'
         },
+        dual: '二つの感覚の刃を携え、あらゆる刺激に挑む戦術家。',
         balanced: 'どんな環境でもマイペース。感覚の調律に長けたバランス職人。'
       };
 
@@ -226,6 +232,7 @@
 
       function getShortSummary(overall, dominant){
         if (overall==='balanced') return SHORT_SUMMARY.balanced;
+        if (overall==='dual') return '過敏と鈍麻の両方が高め：使い分けが鍵。';
         return SHORT_SUMMARY[dominant][overall];
       }
 
@@ -236,6 +243,7 @@
       // 傾向の見出し（ライト表現）
       function tendencyLabel(overall, dominant){
         if (overall==='balanced') return 'バランス型の傾向かも？';
+        if (overall==='dual')     return '過敏と鈍麻、両方が高い“両極端”タイプかも？';
         const axis = AXES.find(a=>a.key===dominant)?.label || '';
         return `${axis}${overall==='hyper'?'過敏':'鈍麻'}の傾向かも？`;
       }
@@ -243,27 +251,50 @@
       // SNSコメント（役職コメントを短く整える：全角50字程度にトリム）
       function shortRoleComment(overall, dominant){
         if (overall==='balanced') return ROLE_COMMENTS.balanced;
+        if (overall==='dual')     return ROLE_COMMENTS.dual;
         const raw = ROLE_COMMENTS[overall][dominant] || '';
         const limit = 50;
         return raw.length <= limit ? raw : (raw.slice(0, limit-1) + '…');
       }
 
+      /* === 改行・空行入り：140字に極力収めるX用投稿文 === */
       function buildShortShareText({title, level, overall, dominant}){
-  const url = baseURL();
-  const urlLen = 23; // XのURL換算長
-  const line1 = '【感覚クエスト⚔️診断結果】';
-  const line2 = ''; // 空行で読みやすく
-  const line3 = `称号「${title}」 Lv${String(level).padStart(2,'0')}`;
-  const line4 = tendencyLabel(overall, dominant);
-  const line5 = shortRoleComment(overall, dominant);
-  const line6 = ''; // 空行
-  const line7 = 'やってみる▶ ' + url;
-  const line8 = ''; // 空行
-  const tag  = '#KANKAKUクエスト';
-  const nl = '\n';
-  let text = [line1, line2, line3, line4, line5, line6, line7, line8, tag].join(nl);
-    return text;
-}
+        const url = baseURL();
+        const urlLen = 23; // XのURL換算長
+        const nl = '
+';
+        const lines = [
+          '【感覚クエスト⚔️診断結果】',
+          '',
+          `称号「${title}」 Lv${String(level).padStart(2,'0')}`,
+          tendencyLabel(overall, dominant),
+          shortRoleComment(overall, dominant),
+          '',
+          'やってみる▶ ' + url,
+          '',
+          '#KANKAKUクエスト'
+        ];
+        let text = lines.join(nl);
+
+        // 140字に収める（URL23文字扱い）
+        const effLen = t => t.length - (url.length - urlLen);
+        const limit = 140;
+        if (effLen(text) <= limit) return text;
+        // まずコメントを短い一文に
+        const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
+        const lines2 = [...lines];
+        lines2[4] = mini4;
+        text = lines2.join(nl);
+        if (effLen(text) <= limit) return text;
+        // 次に空行を一つ削る
+        const lines3 = lines2.filter((l,i)=>!(i===1));
+        text = lines3.join(nl);
+        if (effLen(text) <= limit) return text;
+        // 最後はコメント行を削除
+        const lines4 = lines3.filter((l,i)=>i!==3); // コメント行が詰まっている前提で調整
+        text = lines4.join(nl);
+        return text;
+      }
 
       /* === 5段階（0〜4）：0は「該当しない」 === */
       const LIKERT_WEIGHT = {0:0.00, 1:0.08, 2:0.28, 3:0.65, 4:1.00};
@@ -351,7 +382,7 @@
       /* ================ 結果 ================ */
       function renderResult(){
         const s = calcScores(qs, answers);
-        const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced } = s;
+        const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual } = s;
 
         let titleObj = null, axisLabel = null, roleImg = null, level = null, lvLabel = 'Lv';
         if (overall === 'balanced') {
@@ -360,6 +391,11 @@
           roleImg = IMAGES.balanced;
           level = lvBalanced;
           lvLabel = 'Lv（バランス度）';
+        } else if (overall === 'dual') {
+          titleObj = TITLES.dual.any;
+          axisLabel = '両極端';
+          roleImg = IMAGES.dual;
+          level = lvDual;
         } else {
           const axis = AXES.find(a=>a.key===dominant);
           axisLabel = axis ? axis.label : '';
@@ -373,15 +409,17 @@
           headNote = '今回は大きな偏りは見つかりませんでした。状況や体調によって感じ方がゆるやかに変わる、柔軟タイプかもしれません。';
         } else if (overall === 'balanced') {
           headNote = `大きな偏りはありませんでした。比較的「${AXES.find(a=>a.key===dominant)?.label ?? '—'}」が気になりやすいかもしれません。`;
+        } else if (overall === 'dual') {
+          headNote = '過敏と鈍麻の両方が高く出ました。場面に応じて反応が切り替わるタイプかもしれません。使い分けの工夫が鍵です。';
         } else {
           headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
         }
 
         // 役職コメント（結果ページ表示用）
         const roleComment =
-          overall==='balanced'
-            ? ROLE_COMMENTS.balanced
-            : ROLE_COMMENTS[overall][dominant];
+          overall==='balanced' ? ROLE_COMMENTS.balanced :
+          overall==='dual'     ? ROLE_COMMENTS.dual :
+          ROLE_COMMENTS[overall][dominant];
 
         app.innerHTML = `
           <div class="grid">
@@ -390,7 +428,7 @@
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
-              <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
+              <div class="level-display">Lv：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div class="role-comment">${roleComment}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
@@ -417,7 +455,7 @@
                 <button id="shareFBlink" class="button fb">Facebook でシェア</button>
               </div>
               <div class="small muted" style="text-align:center">
-                改行入りの短文（140字以内）＋短いリンクで投稿します。
+                改行と空行で読みやすく整形された短文（可能な限り140字以内）＋短いリンクで投稿します。
               </div>
               <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
             </div>
@@ -427,7 +465,7 @@
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
                   <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
-                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>（${lvLabel}：Lv${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
+                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>（Lv${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
                   <ul>
                     <li>感覚過敏が学校生活に与える影響と見立て方（音・光・衣服・におい・食事・温度/痛み・動き）</li>
                     <li>家で今日からできる環境調整と声かけ（朝の準備、通学/在宅の工夫）</li>
@@ -458,7 +496,7 @@
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
 
-        // シェア（改行入り140字）
+        // シェア（改行入り・空行あり）
         const shortText = buildShortShareText({ title: titleObj.t, level, overall, dominant });
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
@@ -514,7 +552,7 @@
       // p=0–100 → Lv=0–99（少し緩やか）
       const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
 
-      // スコア計算（非線形ウェイト）
+      // スコア計算（非線形ウェイト）＋ 両極端（dual）判定
       function calcScores(questions, answers){
         const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
         questions.forEach(q=>{
@@ -536,11 +574,17 @@
         const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
         const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
         const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
+        const maxHyper = Math.max(...radar.map(d=>d.hyper));
+        const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
         const EPS = 6;   // 平均差のしきい値（%）
         const LOW = 25;  // 低強度のしきい値
         let overall;
-        if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
+
+        // ★ 先に両極端（dual）を判定
+        if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
+          overall = 'dual';
+        } else if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
           overall = 'balanced';
         } else {
           overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
@@ -554,8 +598,9 @@
         const dom = radar.find(r=>r.axisKey===dominantKey);
         const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
+        const lvDual     = pctToLv(Math.min(maxHyper, maxHypo)); // 両方の強さの下限をレベル化
 
-        return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced };
+        return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual };
       }
 
       function renderAxisFeedback(radar){
