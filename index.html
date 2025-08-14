@@ -7,7 +7,7 @@
 <script>
   // ============ 設定 ============
   const SEMINAR_DATE = '2025-08-23';
-  const SEMINAR_URL = 'https://example.com/kankaku-seminar'; // ←本番URLに差し替え
+  const SEMINAR_URL = 'https://forms.gle/hWcV6LZDvR2S9wX88'; // ←ご指定のフォームURL
   document.getElementById('seminarBtnTop').href = SEMINAR_URL;
 
   // 画像パス
@@ -250,11 +250,17 @@
         ${renderAxisFeedback(radar)}
 
         <div class="card cta">
-          <div class="small" style="color:#1e3a8a">「あなたの感覚について、もっと深く知ってみませんか？」</div>
-          <div style="font-weight:700; color:#1e3a8a">専門家が解説！感覚過敏との付き合い方がわかるオンラインセミナー（${SEMINAR_DATE}）</div>
-          <div class="small" style="color:#1e40af">あなたの結果に合わせておすすめの回をご案内します。</div>
-          <div style="margin-top:8px"><a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページへ</a></div>
+          <div class="cta-grid">
+            <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
+            <div>
+              <div class="small" style="color:#1e3a8a">「あなたの感覚について、もっと深く知ってみませんか？」</div>
+              <div style="font-weight:700; color:#1e3a8a">専門家が解説！感覚過敏との付き合い方がわかるオンラインセミナー（${SEMINAR_DATE}）</div>
+              <div class="small" style="color:#1e40af">称号「${title.t}」のあなたにおすすめの回です。</div>
+              <div style="margin-top:8px"><a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページへ</a></div>
+            </div>
+          </div>
         </div>
+      </div>
       </div>`;
 
     // チャート描画
