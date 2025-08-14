@@ -31,16 +31,27 @@
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
-      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db}
-      .likert button:hover{background:#ffefaf}
-      .likert button.active{background:#fde68a; border-color:#facc15}
+      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; transition:filter .15s ease}
+      .likert button.active{outline:2px solid #facc15; border-color:#facc15}
+      /* 回答ボタンの色分け（v0〜v4） */
+      .likert .v0{ background:#e6f7ec; }  /* あてはまらない：淡い緑 */
+      .likert .v0:hover{ filter:brightness(.98); }
+      .likert .v1{ background:#fff8db; }  /* すこし：薄黄色 */
+      .likert .v1:hover{ filter:brightness(.98); }
+      .likert .v2{ background:#ffefaf; }  /* ときどき：中黄 */
+      .likert .v2:hover{ filter:brightness(.98); }
+      .likert .v3{ background:#fde68a; }  /* よく：やや濃い黄 */
+      .likert .v3:hover{ filter:brightness(.97); }
+      .likert .v4{ background:#facc15; }  /* とても：濃い黄 */
+      .likert .v4:hover{ filter:brightness(.97); }
+
       .cols{display:grid; gap:16px}
       @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
       .small{font-size:12px; color:#475569}
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
-      img.role{width:240px; height:auto; display:block; margin:8px auto 0}
+      img.role{width:360px; height:auto; display:block; margin:8px auto 0} /* 1.5倍 */
       .level-display{font-size:20px; font-weight:700; margin-top:6px}
       .role-comment{margin-top:6px; color:#374151}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
@@ -77,7 +88,7 @@
       /* ================= 設定 ================= */
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
-      const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2
+      const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2（固定28問）
 
       const IMAGES = {
         title: 'images/title-image.png',
@@ -123,7 +134,7 @@
         },
       };
 
-      /* ▼▼ ここが今回の“SNS用コメント” ▼▼ */
+      /* ▼▼ SNS用：役職コメント（50字内トリム用に使用） ▼▼ */
       const ROLE_COMMENTS = {
         hyper: {
           hearing:  '小さな音も聞き逃さない探索の達人。静寂の守護者。',
@@ -145,7 +156,6 @@
         },
         balanced: 'どんな環境でもマイペース。感覚の調律に長けたバランス職人。'
       };
-      /* ▲▲ ここまで ▲▲ */
 
       const AXES = [
         { key: 'hearing',  label: '聴覚' },
@@ -157,17 +167,17 @@
         { key: 'movement', label: '動き' },
       ];
 
-      /* ================ 質問（28問） ================ */
+      /* ================ 質問（最終版 28問） ================ */
       const BANK = [
         // ── 聴覚 ──
         { id:'h_h_1', axis:'hearing', trait:'hyper', adult:'店内やオフィスのざわめきで集中が途切れやすい' },
-        { id:'h_h_2', axis:'hearing', trait:'hyper', adult:'大きな音が苦手で、体が強く反応してしまう' },
-        { id:'h_y_1', axis:'hearing', trait:'hypo',  adult:'小さな音や遠くの音に気づきにくい' },
-        { id:'h_y_2', axis:'hearing', trait:'hypo',  adult:'雑音の中で呼ばれても気づきにくい' },
+        { id:'h_h_2', axis:'hearing', trait:'hyper', adult:'突然の大きな音が苦手で、体が強く反応してしまう' },
+        { id:'h_y_1', axis:'hearing', trait:'hypo',  adult:'雑音の中で呼ばれても気づきにくい' },
+        { id:'h_y_2', axis:'hearing', trait:'hypo',  adult:'にぎやかな場所で小さな音に気づくのが遅れがち' },
 
         // ── 視覚 ──
         { id:'v_h_1', axis:'vision', trait:'hyper', adult:'強い照明や画面の光がつらく、遮光したくなる' },
-        { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きが負担に感じられる' },
+        { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きに疲れやすい' },
         { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'部屋が暗くなったことに気が付きにくい' },
         { id:'v_y_2', axis:'vision', trait:'hypo',  adult:'画面や印刷の細かい違いに気づきにくい' },
 
@@ -186,20 +196,20 @@
         // ── 味覚 ──
         { id:'ta_h_1', axis:'taste', trait:'hyper', adult:'繊細な味の違いがわかり、好みがはっきりしている' },
         { id:'ta_h_2', axis:'taste', trait:'hyper', adult:'食感や香りが合わないと食べづらい' },
-        { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'薄味では物足りなく感じる' },
+        { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'濃い味やスパイスの強い料理を求める' },
         { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'新しい味の刺激を強く求める' },
 
         // ── 温度/痛み ──
         { id:'tp_h_1', axis:'tempPain', trait:'hyper', adult:'室温のわずかな変化が気になる' },
         { id:'tp_h_2', axis:'tempPain', trait:'hyper', adult:'小さな痛みでも集中が切れやすい' },
-        { id:'tp_y_1', axis:'tempPain', trait:'hypo',  adult:'暑さ寒さの変化に気づきにくい' },
-        { id:'tp_y_2', axis:'tempPain', trait:'hypo',  adult:'軽いケガの痛みを感じにくい' },
+        { id:'tp_y_1', axis:'tempPain', trait:'hypo',  adult:'暑さ寒さに気づくのが遅れがち' },
+        { id:'tp_y_2', axis:'tempPain', trait:'hypo',  adult:'軽いケガでも痛みをあまり感じない' },
 
         // ── 動き ──
         { id:'m_h_1', axis:'movement', trait:'hyper', adult:'人混みや揺れで酔いやすい' },
         { id:'m_h_2', axis:'movement', trait:'hyper', adult:'急な動きや加速が苦手' },
-        { id:'m_y_1', axis:'movement', trait:'hypo',  adult:'弱い揺れやゆっくりした動きでは物足りなく感じる' },
-        { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて走ったりジャンプしたくなる' },
+        { id:'m_y_1', axis:'movement', trait:'hypo',  adult:'スピードや回転の刺激を強く好む' },
+        { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて走ったりジャンプしたくなる' }
       ];
 
       /* === 140字向けショート要約（従来） === */
@@ -267,8 +277,8 @@
         return text;
       }
 
-      /* === 非線形ウェイト（1・2は軽め） === */
-      const LIKERT_WEIGHT = [0, 0.08, 0.28, 0.65, 1.00];
+      /* === 5段階（0〜4）：0は「該当しない」 === */
+      const LIKERT_WEIGHT = {0:0.00, 1:0.08, 2:0.28, 3:0.65, 4:1.00};
       const LIKERT = [
         { v:0, label:'あてはまらない' },
         { v:1, label:'すこしあてはまる' },
@@ -302,7 +312,7 @@
       }
 
       function startQuestions(){
-        qs = pickQuestions(QUESTION_COUNT);
+        qs = pickQuestions(QUESTION_COUNT); // 軸ごとに必須28問を収集
         answers = {}; index = 0;
         renderQuestion();
       }
@@ -332,7 +342,7 @@
         LIKERT.forEach(o=>{
           const btn = document.createElement('button');
           btn.textContent = o.label;
-          btn.className='button';
+          btn.className='button v'+o.v; // 色クラス付与
           if(answered===o.v) btn.classList.add('active');
           btn.onclick=()=> selectAndNext(o.v);
           wrap.appendChild(btn);
@@ -344,7 +354,7 @@
       // 選択→即次へ
       function selectAndNext(value){
         const q = qs[index];
-        answers[q.id] = value;
+        answers[q.id] = value; // 0〜4
         const total = qs.length;
         if(index+1 < total){ index++; renderQuestion(); }
         else { renderResult(); }
@@ -388,7 +398,7 @@
         app.innerHTML = `
           <div class="grid">
             <div class="card center">
-              <h2>結果</h2>
+              <h2>感覚クエスト⚔️診断結果</h2>
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
@@ -479,7 +489,7 @@
       function renderAxisLevelBadges(radar){
         return radar.map(d=>{
           const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-        const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
+          const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
           return `
             <div class="level-item">
               <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
@@ -500,10 +510,10 @@
           const Y = byAxis[ax.key].hypo.slice(0,2);
           picked.push(...H, ...Y);
         });
-        return picked; // ちょうど28問
+        return shuffle(picked); // ランダム順で出題
       }
 
-      // シャッフル（現在は順番固定でOKなら未使用）
+      // フィッシャー–イェーツシャッフル
       function shuffle(arr){
         const a = arr.slice();
         for(let i=a.length-1;i>0;i--){
