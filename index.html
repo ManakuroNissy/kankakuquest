@@ -16,7 +16,7 @@
       .container{max-width:960px; margin:0 auto; padding:16px}
       header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
       header .bar{display:flex; align-items:center; justify-content:space-between; padding:10px 16px}
-      .brand{display:flex; gap:10px; align-items:center}
+      .brand{display:flex; gap:10px; align-items:center; cursor:pointer; text-decoration:none; color:inherit}
       .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
@@ -24,11 +24,11 @@
       .button[disabled]{opacity:.5; cursor:not-allowed}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
-      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}  /* 70%に変更 */
+      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
-      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db} /* 薄い黄色 */
+      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db}
       .likert button:hover{background:#ffefaf}
       .likert button.active{background:#fde68a; border-color:#facc15}
       .cols{display:grid; gap:16px}
@@ -41,17 +41,20 @@
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
       .cta{background:#eff6ff; border:1px solid #bfdbfe}
       .start-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:12px}
-      .cta-grid{display:grid; gap:16px; align-items:center; grid-template-columns:1fr}
+      .cta-grid{display:grid; gap:16px; align-items:start; grid-template-columns:1fr}
       @media(min-width:900px){.cta-grid{grid-template-columns:280px 1fr}}
       .seminar-banner{width:100%; height:auto; border-radius:12px; border:1px solid #bfdbfe}
       .cta h3{margin:8px 0 10px}
-      .cta p{margin:6px 0}
+      .cta p{margin:8px 0}
+      .cta ul{margin:6px 0 0 1.2em}
     </style>
   </head>
   <body>
     <header>
       <div class="bar container">
-        <div class="brand"><div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div></div>
+        <a id="homeLink" class="brand">
+          <div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div>
+        </a>
         <a id="seminarBtnTop" class="button primary" target="_blank" href="#">8/23 セミナーを見る</a>
       </div>
     </header>
@@ -115,7 +118,7 @@
         { key: 'movement', label: '動き' },
       ];
 
-      // 質問バンク（わかりやすい表現に微調整）
+      // 質問バンク（表現微調整済）
       const BANK = [
         // 聴覚
         { id: 'h_h_1', axis: 'hearing', trait: 'hyper', child: '教室のざわざわがつらく、耳をふさぎたくなることがある', adult: '店内やオフィスのざわめきで集中が切れやすい' },
@@ -218,6 +221,7 @@
           </div>`;
         document.getElementById('startSelf').onclick=()=>{who='self'; phrasing='adult'; renderMode();};
         document.getElementById('startChild').onclick=()=>{who='child'; phrasing='child'; renderMode();};
+        window.scrollTo({top:0, behavior:'smooth'});
       }
 
       function renderMode(){
@@ -240,6 +244,7 @@
         document.getElementById('mDeep').onclick=()=>{mode='deep'; startQuestions();};
         document.getElementById('sayChild').onclick=()=>{phrasing='child';};
         document.getElementById('sayAdult').onclick=()=>{phrasing='adult';};
+        window.scrollTo({top:0, behavior:'smooth'});
       }
 
       function startQuestions(){
@@ -262,7 +267,7 @@
                 <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
                 <div class="small">${index+1} / ${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">${text}</div> <!-- 余白を広げる -->
+              <div style="font-size:18px; margin-bottom:20px">${text}</div>
               <div class="likert" id="likert"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
                 <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
@@ -280,6 +285,7 @@
           wrap.appendChild(btn);
         });
         document.getElementById('prevBtn').onclick=()=>{ if(index>0){ index--; renderQuestion(); } };
+        window.scrollTo({top:0, behavior:'smooth'});
       }
 
       // 回答→即・次へ
@@ -317,14 +323,25 @@
               <div class="cta-grid">
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
-                  <p class="small" style="color:#1e3a8a; margin-top:0;">「あなたの感覚について、もっと深く知ってみませんか？」</p>
-                  <h3 style="color:#1e3a8a;">専門家が解説！感覚過敏との付き合い方がわかるオンラインセミナー（${SEMINAR_DATE}）</h3>
-                  <p class="small" style="color:#1e40af;">称号「${title.t}」のあなたにおすすめの回です。</p>
+                  <h3 style="color:#1e3a8a;">専門家が解説！感覚過敏との上手な付き合い方（${SEMINAR_DATE} オンライン）</h3>
+                  <p>KANKAKUクエストの結果、あなたは <strong>「称号：${title.t}」</strong>。その特徴に合わせて、毎日の「しんどい」をやわらげるヒントを、保護者目線でわかりやすくお話しします。</p>
+                  <ul>
+                    <li>感覚の仕組みと見立て方（聴覚／視覚／触覚／嗅覚／味覚／温度・痛み／動き）</li>
+                    <li>家・学校などでできる具体的な工夫（音・光・衣服・におい・食事・環境調整など）</li>
+                    <li>周囲への伝え方・配慮の求め方、便利グッズや設定例</li>
+                  </ul>
+                  <p><strong>特別講師：加藤 路瑛（感覚過敏研究所 所長）</strong><br>
+                     <strong>主催・進行：まなクロ にっしー（元教員／不登校支援者）</strong></p>
+                  <p class="small">不登校や発達障害のお子さんの保護者の方も、支援者の方もどちらも歓迎です。</p>
                   <div style="margin-top:10px">
-                    <a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページへ</a>
+                    <a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページ（Googleフォーム）</a>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div class="card center">
+              <button id="retryBtn" class="button">もう一度調べる</button>
             </div>
           </div>`;
 
@@ -341,6 +358,10 @@
           },
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
+
+        // 「もう一度調べる」
+        document.getElementById('retryBtn').onclick = () => { who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); };
+        window.scrollTo({top:0, behavior:'smooth'});
       }
 
       function renderAxisFeedback(radar){
@@ -412,10 +433,12 @@
         return { radar, hyperAvg, hypoAvg, dominant };
       }
 
-      // 初期表示（DOM構築後に実行）
+      // 初期表示（DOM構築後に実行） + 左上ロゴでトップへ
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
+        const home = document.getElementById('homeLink');
+        if (home) home.addEventListener('click', (e)=>{ e.preventDefault(); who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); });
         renderStart();
       });
     </script>
