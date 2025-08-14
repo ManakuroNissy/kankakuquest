@@ -21,10 +21,13 @@
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
       .button.success{background:var(--good); color:#fff; border-color:transparent}
+      .button.x{background:#111; color:#fff; border-color:#111}
+      .button.fb{background:#1877F2; color:#fff; border-color:#1877F2}
+      .button.ig{background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af,#515bd4); color:#fff; border-color:transparent}
       .button[disabled]{opacity:.5; cursor:not-allowed}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
-      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}
+      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}  /* 70%に変更 */
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
@@ -47,6 +50,9 @@
       .cta h3{margin:8px 0 10px}
       .cta p{margin:8px 0}
       .cta ul{margin:6px 0 0 1.2em}
+      .share{display:grid; gap:10px; justify-items:center}
+      .share .buttons{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+      .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
     </style>
   </head>
   <body>
@@ -125,8 +131,8 @@
         { id: 'h_h_2', axis: 'hearing', trait: 'hyper', child: '突然の大きな音に強くびっくりする', adult: 'アラームや工事音などの大きな音が強いストレスになる' },
         { id: 'h_y_1', axis: 'hearing', trait: 'hypo',  child: '呼ばれても気づかず、何度も呼ばれることがある', adult: 'アナウンスや声に反応が遅れることがある' },
         // 視覚
-        { id: 'v_h_1', axis: 'vision', trait: 'hyper', child: '蛍光灯や日差しがまぶしくて目を細める', adult: '強い照明や画面光がつらく、遮光が欲しくなる' },
-        { id: 'v_h_2', axis: 'vision', trait: 'hyper', child: '画面のちらつきや速い動きがしんどい', adult: '高コントラスト/ちらつきで疲労や頭痛が出やすい' },
+        { id: 'v_h_1', axis: 'vision', trait: 'hyper', child: '画面のちらつきや速い動きがしんどい', adult: '高コントラスト/ちらつきで疲労や頭痛が出やすい' },
+        { id: 'v_h_2', axis: 'vision', trait: 'hyper', child: '蛍光灯や日差しがまぶしくて目を細める', adult: '強い照明や画面光がつらく、遮光が欲しくなる' },
         { id: 'v_y_1', axis: 'vision', trait: 'hypo',  child: '暗い場所が好き/暗くても平気で動ける', adult: '暗い場所でも困らないことが多い' },
         // 触覚
         { id: 't_h_1', axis: 'touch', trait: 'hyper', child: 'タグやチクチクする服が苦手', adult: 'ウール/化繊/タグなどの刺激が気になる' },
@@ -193,7 +199,7 @@
 
       // ======= 状態 =======
       let who = null; // 'self' | 'child'
-      let phrasing = 'adult'; // 表現：'adult' | 'child'
+      let phrasing = 'adult'; // 表現は大人向けに固定
       let mode = null; // 'easy'|'normal'|'deep'
       let qs = []; // 質問配列
       let answers = {}; // {qid:number}
@@ -220,27 +226,26 @@
             </div>
           </div>`;
         document.getElementById('startSelf').onclick=()=>{who='self'; phrasing='adult'; renderMode();};
-        document.getElementById('startChild').onclick=()=>{who='child'; phrasing='child'; renderMode();};
+        document.getElementById('startChild').onclick=()=>{who='child'; phrasing='adult'; renderMode();}; // 表現は大人で固定
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-function renderMode(){
-  app.innerHTML = `
-    <div class="card" style="text-align:center">
-      <h2>調べ方を選ぶ</h2>
-      <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
-      <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
-        <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
-        <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
-        <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
-      </div>
-    </div>`;
-  document.getElementById('mEasy').onclick   = ()=>{ mode='easy';   startQuestions(); };
-  document.getElementById('mNormal').onclick = ()=>{ mode='normal'; startQuestions(); };
-  document.getElementById('mDeep').onclick   = ()=>{ mode='deep';   startQuestions(); };
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
+      function renderMode(){
+        app.innerHTML = `
+          <div class="card" style="text-align:center">
+            <h2>調べ方を選ぶ</h2>
+            <div class="muted">各軸の質問数が変わります。時間に合わせてどうぞ。</div>
+            <div style="display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:12px">
+              <button class="button" id="mEasy">簡単<br><span class="small">各軸2問（約2–3分）</span></button>
+              <button class="button" id="mNormal">普通<br><span class="small">各軸3問（約4–6分）</span></button>
+              <button class="button" id="mDeep">しっかり<br><span class="small">各軸4–5問（約7–10分）</span></button>
+            </div>
+          </div>`;
+        document.getElementById('mEasy').onclick=()=>{mode='easy'; startQuestions();};
+        document.getElementById('mNormal').onclick=()=>{mode='normal'; startQuestions();};
+        document.getElementById('mDeep').onclick=()=>{mode='deep'; startQuestions();};
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
 
       function startQuestions(){
         qs = pickQuestions(mode);
@@ -251,7 +256,7 @@ function renderMode(){
       function renderQuestion(){
         const total = qs.length;
         const q = qs[index];
-        const text = phrasing==='child'? q.child : q.adult;
+        const text = phrasing==='child'? q.child : q.adult; // 現状 adult 固定
         const answered = answers[q.id];
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
@@ -318,16 +323,17 @@ function renderMode(){
               <div class="cta-grid">
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
-                  <h3 style="color:#1e3a8a;">専門家が解説！感覚過敏との上手な付き合い方（${SEMINAR_DATE} オンライン）</h3>
-                  <p>KANKAKUクエストの結果は <strong>「称号：${title.t}」</strong>。オンラインセミナーでは毎日の「しんどい」をやわらげるヒントを、保護者目線でわかりやすくお話しします。</p>
+                  <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
+                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${title.t}」</strong>。</p>
+                  <p>その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でわかりやすくお伝えします。</p>
                   <ul>
-                    <li>感覚の仕組みと見立て方（聴覚／視覚／触覚／嗅覚／味覚／温度・痛み／動き）</li>
-                    <li>家・学校などでできる具体的な工夫（音・光・衣服・におい・食事・環境調整など）</li>
-                    <li>周囲への伝え方・配慮の求め方、便利グッズや設定例</li>
+                    <li>感覚過敏が学校生活に与える影響と見立て方（音・光・衣服・におい・食事・温度/痛み・動き）</li>
+                    <li>家で今日からできる環境調整と声かけ（朝の準備、通学/在宅の工夫）</li>
+                    <li>学校・支援先への伝え方（合理的配慮のお願い文例、先生への共有ポイント）</li>
+                    <li>不登校期の過ごし方と、復帰／進路選択に向けたステップ</li>
                   </ul>
                   <p><strong>特別講師：加藤 路瑛（感覚過敏研究所 所長）</strong><br>
-                     <strong>主催・進行：まなクロ にっしー（元教員／不登校支援者／不登校２児の親）</strong></p>
-                  <p class="small">不登校や発達障害のお子さんの保護者の方も、支援者の方もどちらも歓迎です。</p>
+                     <strong>主催・進行：まなクロ にっしー（元教員／不登校支援者）</strong></p>
                   <div style="margin-top:10px">
                     <a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページ（Googleフォーム）</a>
                   </div>
@@ -335,14 +341,21 @@ function renderMode(){
               </div>
             </div>
 
-            <div class="card center">
-              <button id="retryBtn" class="button">もう一度調べる</button>
+            <div class="card share">
+              <div style="font-weight:700;">結果をシェア</div>
+              <div class="buttons">
+                <button id="shareX"  class="button x">X に投稿</button>
+                <button id="shareFB" class="button fb">Facebook に投稿</button>
+                <button id="shareImg" class="button ig">Instagram用 画像を保存/共有</button>
+              </div>
+              <div class="small muted">※ Instagramは投稿用URLの事前入力ができないため、画像を保存してアプリから投稿してください（対応端末ではそのまま共有できます）。</div>
+              <div style="margin-top:8px"><button id="retryBtn" class="button">もう一度調べる</button></div>
             </div>
           </div>`;
 
         // チャート描画（センタリング済）
         const ctx = document.getElementById('radar');
-        new Chart(ctx, {
+        const chart = new Chart(ctx, {
           type: 'radar',
           data: {
             labels: radar.map(d=>d.axis),
@@ -354,9 +367,153 @@ function renderMode(){
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
 
+        // シェア周り
+        const axisLabelShort = axisLabel; // 必要なら略称に
+        const shareText = makeShareText(title.t, axisLabelShort);
+        const shareUrl  = getSiteUrl();
+
+        document.getElementById('shareX').onclick = () => {
+          const t = encodeURIComponent(shareText);
+          const u = encodeURIComponent(shareUrl);
+          window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`,'_blank');
+        };
+
+        document.getElementById('shareFB').onclick = () => {
+          const u = encodeURIComponent(shareUrl);
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
+        };
+
+        document.getElementById('shareImg').onclick = async () => {
+          try{
+            const img = await buildShareImage({
+              titleText: title.t,
+              axisLabel: axisLabelShort,
+              leaning: (leaning==='hyper'?'過敏':'鈍麻'),
+              radarCanvas: ctx.canvas,
+              roleImgSrc: roleImg
+            });
+            await shareOrDownloadImage(img.blob, 'kankaku-quest.png', shareText);
+          }catch(e){
+            console.error(e);
+            alert('画像の作成に失敗しました。もう一度お試しください。');
+          }
+        };
+
         // 「もう一度調べる」
         document.getElementById('retryBtn').onclick = () => { who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); };
         window.scrollTo({top:0, behavior:'smooth'});
+      }
+
+      // ======= シェア関連ユーティリティ =======
+      function makeShareText(titleText, axisLabel){
+        const tags = '#KANKAKUクエスト #感覚過敏';
+        return `KANKAKUクエスト｜称号「${titleText}」／特徴：${axisLabel} ${tags}`;
+      }
+      function getSiteUrl(){
+        // クエリやハッシュを除いた現在ページURL
+        return location.origin + location.pathname.replace(/index\\.html$/, '');
+      }
+
+      async function buildShareImage({ titleText, axisLabel, leaning, radarCanvas, roleImgSrc }){
+        const W=1080, H=1080; // IG向け正方形
+        const c = document.createElement('canvas'); c.width=W; c.height=H;
+        const ctx = c.getContext('2d');
+
+        // 背景
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
+
+        // タイトル
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 56px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillText('KANKAKUクエスト', 60, 100);
+        ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillText('あなたの感覚ジョブ診断', 60, 145);
+
+        // 枠
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 2;
+        roundRect(ctx, 60, 180, W-120, H-260, 24);
+        ctx.stroke();
+
+        // 称号
+        ctx.font = 'bold 44px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillText(`称号：${titleText}`, 90, 250);
+
+        // 特徴
+        ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillText(`特徴：${axisLabel}／傾向：${leaning}`, 90, 295);
+
+        // 役職画像
+        const roleImg = await loadImage(roleImgSrc);
+        const roleBoxW = 360, roleBoxH = 360;
+        const roleX = 100, roleY = 330;
+        const {dw:riw, dh:rih} = fitContain(roleImg.width, roleImg.height, roleBoxW, roleBoxH);
+        ctx.drawImage(roleImg, roleX + (roleBoxW-riw)/2, roleY + (roleBoxH-rih)/2, riw, rih);
+
+        // レーダーチャートを合成
+        const radarDataUrl = radarCanvas.toDataURL('image/png');
+        const radarImg = await loadImage(radarDataUrl);
+        const radarW=460, radarH=460, radarX=520, radarY=300;
+        ctx.drawImage(radarImg, radarX, radarY, radarW, radarH);
+
+        // ハッシュタグ＆URL
+        ctx.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillStyle = '#334155';
+        ctx.fillText('#KANKAKUクエスト  #感覚過敏', 90, 730);
+        ctx.fillStyle = '#475569';
+        ctx.fillText(getSiteUrl(), 90, 770);
+
+        // フッター
+        ctx.font = '20px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('by MANAKURO', 90, 1010);
+
+        const blob = await new Promise(res => c.toBlob(b => res(b), 'image/png'));
+        const url  = URL.createObjectURL(blob);
+        return { blob, url };
+      }
+
+      function roundRect(ctx, x, y, w, h, r){
+        ctx.beginPath();
+        ctx.moveTo(x+r, y);
+        ctx.arcTo(x+w, y,   x+w, y+h, r);
+        ctx.arcTo(x+w, y+h, x,   y+h, r);
+        ctx.arcTo(x,   y+h, x,   y,   r);
+        ctx.arcTo(x,   y,   x+w, y,   r);
+        ctx.closePath();
+      }
+      function fitContain(sw, sh, dw, dh){
+        const s = Math.min(dw/sw, dh/sh);
+        return { dw: Math.round(sw*s), dh: Math.round(sh*s) };
+      }
+      function loadImage(src){
+        return new Promise((ok, ng)=>{
+          const i = new Image(); i.onload=()=>ok(i); i.onerror=ng; i.src = src;
+        });
+      }
+
+      async function shareOrDownloadImage(blob, filename, text){
+        const file = new File([blob], filename, {type:'image/png'});
+        if(navigator.canShare && navigator.canShare({ files:[file] })){
+          try{
+            await navigator.share({ files:[file], text });
+            return;
+          }catch(e){
+            // キャンセル等は無視してDLにフォールバック
+          }
+        }
+        // ダウンロードにフォールバック
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        // 共有テキストもコピーしてあげる
+        try{
+          await navigator.clipboard.writeText(text + '\n' + getSiteUrl());
+          alert('シェア用画像を保存しました。テキストもコピー済みです。Instagramや各SNSに貼り付けて投稿してください。');
+        }catch{
+          alert('シェア用画像を保存しました。必要ならテキストを手動でコピーしてください。');
+        }
       }
 
       function renderAxisFeedback(radar){
@@ -416,17 +573,31 @@ function renderMode(){
         });
         const radar = AXES.map(ax=>{
           const maxH = Math.max(1, sums[ax.key].hc*4);
-          const maxY = Math.max(1, sums[ax.key].yc*4);
-          const hyper = Math.round((sums[ax.key].h/maxH)*100);
-          const hypo  = Math.round((sums[ax.key].y/maxY)*100);
-          return { axis: ax.label, axisKey: ax.key, hyper, hypo };
+          const maxY = Math.max(1, sums[ax[key].yc*4]); // typo guard? (we will correct next line)
         });
-        const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
-        const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
-        let dominant = AXES[0].key, best=-1;
-        radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominant=d.axisKey;} });
-        return { radar, hyperAvg, hypoAvg, dominant };
-      }
+        // 修正: 上の1行を正しく再構築
+      </script>
+      <script>
+        function calcScores(questions, answers){
+          const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
+          questions.forEach(q=>{
+            const v = answers[q.id]; if(v==null) return;
+            if(q.trait==='hyper'){sums[q.axis].h+=v; sums[q.axis].hc++;}
+            else {sums[q.axis].y+=v; sums[q.axis].yc++;}
+          });
+          const radar = AXES.map(ax=>{
+            const maxH = Math.max(1, sums[ax.key].hc*4);
+            const maxY = Math.max(1, sums[ax.key].yc*4);
+            const hyper = Math.round((sums[ax.key].h/maxH)*100);
+            const hypo  = Math.round((sums[ax.key].y/maxY)*100);
+            return { axis: ax.label, axisKey: ax.key, hyper, hypo };
+          });
+          const hyperAvg = Math.round(radar.reduce((a,d)=>a+d.hyper,0)/radar.length);
+          const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
+          let dominant = AXES[0].key, best=-1;
+          radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominant=d.axisKey;} });
+          return { radar, hyperAvg, hypoAvg, dominant };
+        }
 
       // 初期表示（DOM構築後に実行） + 左上ロゴでトップへ
       window.addEventListener('DOMContentLoaded', () => {
