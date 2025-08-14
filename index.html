@@ -134,12 +134,12 @@
           tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
           movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
         },
-  dual: { // 両極端専用
-    any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' }
-  },
-  normal: { // 両方が低い（ノーマライザー）
-    any: { t: '感覚の調律者（ノーマライザー）', role: 'ノーマライザー' }
-  }
+        dual: { // 両極端専用
+          any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' }
+        },
+        normal: { // 両方が低い（ノーマライザー）
+          any: { t: 'バランス型：ノーマライザー', role: 'ノーマライザー' }
+        }
       };
 
       /* ▼▼ SNS用：役職コメント（50字内トリム用に使用） ▼▼ */
@@ -270,6 +270,34 @@
           '【感覚クエスト⚔️診断結果】',
           '',
           `称号「${title}」 Lv${String(level).padStart(2,'0')}`,
+          tendencyLabel(overall, dominant),
+          shortRoleComment(overall, dominant),
+          '',
+          'やってみる▶ ' + url,
+          '',
+          '#KANKAKUクエスト'
+        ];
+        let text = lines.join(nl);
+
+        // 140字に収める（URL23文字扱い）
+        const effLen = t => t.length - (url.length - urlLen);
+        const limit = 140;
+        if (effLen(text) <= limit) return text;
+        // まずコメントを短い一文に
+        const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
+        const lines2 = [...lines];
+        lines2[4] = mini4;
+        text = lines2.join(nl);
+        if (effLen(text) <= limit) return text;
+        // 次に空行を一つ削る
+        const lines3 = lines2.filter((l,i)=>!(i===1));
+        text = lines3.join(nl);
+        if (effLen(text) <= limit) return text;
+        // 最後はコメント行を削除
+        const lines4 = lines3.filter((l,i)=>i!==3);
+        text = lines4.join(nl);
+        return text;
+      }」 Lv${String(level).padStart(2,'0')}`,
           tendencyLabel(overall, dominant),
           shortRoleComment(overall, dominant),
           '',
@@ -431,7 +459,7 @@
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
-              <div class="level-display">Lv：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
+              <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div class="role-comment">${roleComment}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
