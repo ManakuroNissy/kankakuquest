@@ -27,11 +27,11 @@
       .button.x:hover,.button.fb:hover{filter:brightness(.95)}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
-      .hero img{width:70%; max-width:800px; margin:0 auto; display:block} /* タイトル画像70% */
+      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
-      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db} /* 薄い黄色 */
+      .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; background:#fff8db}
       .likert button:hover{background:#ffefaf}
       .likert button.active{background:#fde68a; border-color:#facc15}
       .cols{display:grid; gap:16px}
@@ -40,9 +40,7 @@
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
-      /* 画像を1.5倍（160→240） */
       img.role{width:240px; height:auto; display:block; margin:8px auto 0}
-      /* レベル表記を大きく */
       .level-display{font-size:20px; font-weight:700; margin-top:6px}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
       .cta{background:#eff6ff; border:1px solid #bfdbfe}
@@ -54,6 +52,7 @@
       .level-item{border:1px solid var(--ring); border-radius:12px; padding:10px; background:#fff}
       .level-item .lv{font-weight:700}
       .chip{display:inline-block; padding:2px 8px; font-size:12px; border-radius:999px; background:#f1f5f9; margin-left:6px}
+      .disclaimer{margin-top:10px; font-size:12px; color:#64748b; line-height:1.6}
     </style>
   </head>
   <body>
@@ -77,7 +76,7 @@
       /* ================= 設定 ================= */
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
-      const QUESTION_COUNT = 28; // しっかり相当：固定
+      const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2
 
       const IMAGES = {
         title: 'images/title-image.png',
@@ -133,82 +132,50 @@
         { key: 'movement', label: '動き' },
       ];
 
-      /* ================ 質問 ================ */
+      /* ================ 質問（28問） ================ */
+      const BANK = [
+        // ── 聴覚 ──
+        { id:'h_h_1', axis:'hearing', trait:'hyper', adult:'店内やオフィスのざわめきで集中が切れやすい' },
+        { id:'h_h_2', axis:'hearing', trait:'hyper', adult:'突然の大きな音が苦手で、体が強く反応してしまう' },
+        { id:'h_y_1', axis:'hearing', trait:'hypo',  adult:'にぎやかな場所でも会話を続けられることが多い' },
+        { id:'h_y_2', axis:'hearing', trait:'hypo',  adult:'雑音の中で呼ばれても気づかないことがある' },
 
-const BANK = [
-  // ── 聴覚 ──
-  { id:'h_h_1', axis:'hearing', trait:'hyper', adult:'店内やオフィスのざわめきで集中が切れやすい' },         // 過敏：回避
-  { id:'h_h_2', axis:'hearing', trait:'hyper', adult:'突然の大きな音が苦手で、体が強く反応してしまう' },       // 過敏：驚愕反応
-  { id:'h_y_1', axis:'hearing', trait:'hypo',  adult:'にぎやかな場所でも会話を続けられることが多い' },         // 鈍麻：閾値高
-  { id:'h_y_2', axis:'hearing', trait:'hypo',  adult:'雑音の中で呼ばれても気づかないことがある' },             // 鈍麻：気づき遅れ
+        // ── 視覚 ──
+        { id:'v_h_1', axis:'vision', trait:'hyper', adult:'強い照明や画面の光がつらく、遮光したくなる' },
+        { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きに疲れやすい' },
+        { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'暗い場所でもあまり困らない' },
+        { id:'v_y_2', axis:'vision', trait:'hypo',  adult:'画面や印刷の細かい違いに気づかないことがある' },
 
-  // ── 視覚 ──
-  { id:'v_h_1', axis:'vision', trait:'hyper', adult:'強い照明や画面の光がつらく、遮光したくなる' },           // 過敏：光
-  { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きに疲れやすい' },                 // 過敏：ちらつき/動き
-  { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'暗い場所でもあまり困らない' },                           // 鈍麻：暗所に強い
-  { id:'v_y_2', axis:'vision', trait:'hypo',  adult:'画面や印刷の細かい違いに気づかないことがある' },           // 鈍麻：細部の検知弱
+        // ── 触覚 ──
+        { id:'t_h_1', axis:'touch', trait:'hyper', adult:'チクチクする服やタグが苦手' },
+        { id:'t_h_2', axis:'touch', trait:'hyper', adult:'手や服のベタつきが気になりやすい' },
+        { id:'t_y_1', axis:'touch', trait:'hypo',  adult:'ぎゅっとした圧があると落ち着くことがある' },
+        { id:'t_y_2', axis:'touch', trait:'hypo',  adult:'軽い擦り傷にすぐ気づかないことがある' },
 
-  // ── 触覚 ──
-  { id:'t_h_1', axis:'touch', trait:'hyper', adult:'チクチクする服やタグが苦手' },                            // 過敏：素材
-  { id:'t_h_2', axis:'touch', trait:'hyper', adult:'手や服のベタつきが気になりやすい' },                      // 過敏：汚れ/粘着
-  { id:'t_y_1', axis:'touch', trait:'hypo',  adult:'ぎゅっとした圧があると落ち着くことがある' },              // 鈍麻：圧刺激好み
-  { id:'t_y_2', axis:'touch', trait:'hypo',  adult:'軽い擦り傷にすぐ気づかないことがある' },                  // 鈍麻：気づき遅れ
+        // ── 嗅覚 ──
+        { id:'s_h_1', axis:'smell', trait:'hyper', adult:'香水や柔軟剤のにおいが強く感じられて離れたくなる' },
+        { id:'s_h_2', axis:'smell', trait:'hyper', adult:'料理のにおいが混ざる場所が苦手' },
+        { id:'s_y_1', axis:'smell', trait:'hypo',  adult:'強いにおいでも平気なことが多い' },
+        { id:'s_y_2', axis:'smell', trait:'hypo',  adult:'食品の傷みのにおいに気づくのが遅れることがある' },
 
-  // ── 嗅覚 ──
-  { id:'s_h_1', axis:'smell', trait:'hyper', adult:'香水や柔軟剤のにおいが強く感じられて離れたくなる' },      // 過敏：香料
-  { id:'s_h_2', axis:'smell', trait:'hyper', adult:'料理のにおいが混ざる場所が苦手' },                        // 過敏：混合臭
-  { id:'s_y_1', axis:'smell', trait:'hypo',  adult:'強いにおいでも平気なことが多い' },                        // 鈍麻：閾値高
-  { id:'s_y_2', axis:'smell', trait:'hypo',  adult:'食品の傷みのにおいに気づくのが遅れることがある' },        // 鈍麻：気づき遅れ
+        // ── 味覚 ──
+        { id:'ta_h_1', axis:'taste', trait:'hyper', adult:'繊細な味の違いがわかり、好みがはっきりしている' },
+        { id:'ta_h_2', axis:'taste', trait:'hyper', adult:'食感や香りが合わないと食べづらいことがある' },
+        { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'濃い味やスパイスの強い料理が好き' },
+        { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'新しい味の刺激を試したくなることが多い' },
 
-  // ── 味覚 ──
-  { id:'ta_h_1', axis:'taste', trait:'hyper', adult:'繊細な味の違いがわかり、好みがはっきりしている' },        // 過敏：微差検知
-  { id:'ta_h_2', axis:'taste', trait:'hyper', adult:'食感や香りが合わないと食べづらいことがある' },            // 過敏：回避
-  { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'濃い味やスパイスの強い料理が好き' },                      // 鈍麻：強刺激好み
-  { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'新しい味の刺激を試したくなることが多い' },                // 鈍麻：刺激希求
+        // ── 温度/痛み ──
+        { id:'tp_h_1', axis:'tempPain', trait:'hyper', adult:'室温のわずかな変化が気になる' },
+        { id:'tp_h_2', axis:'tempPain', trait:'hyper', adult:'小さな痛みでも集中が切れやすい' },
+        { id:'tp_y_1', axis:'tempPain', trait:'hypo',  adult:'暑さ寒さに気づくのが遅れることがある' },
+        { id:'tp_y_2', axis:'tempPain', trait:'hypo',  adult:'軽いケガでも痛みをあまり感じないことがある' },
 
-  // ── 温度/痛み ──
-  { id:'tp_h_1', axis:'tempPain', trait:'hyper', adult:'室温のわずかな変化が気になる' },                      // 過敏：温度
-  { id:'tp_h_2', axis:'tempPain', trait:'hyper', adult:'小さな痛みでも集中が切れやすい' },                    // 過敏：痛み
-  { id:'tp_y_1', axis:'tempPain', trait:'hypo',  adult:'暑さ寒さに気づくのが遅れることがある' },              // 鈍麻：気づき遅れ
-  { id:'tp_y_2', axis:'tempPain', trait:'hypo',  adult:'軽いケガでも痛みをあまり感じないことがある' },          // 鈍麻：閾値高
-
-  // ── 動き ──
-  { id:'m_h_1', axis:'movement', trait:'hyper', adult:'人混みや揺れで酔いやすい' },                           // 過敏：平衡感
-  { id:'m_h_2', axis:'movement', trait:'hyper', adult:'急な動きや加速が苦手' },                               // 過敏：加速度
-  { id:'m_y_1', axis:'movement', trait:'hypo',  adult:'スピードや回転を楽しめる' },                            // 鈍麻：強刺激好み
-  { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて、つい走ったりジャンプしたくなる' },        // 鈍麻：刺激希求
+        // ── 動き ──
+        { id:'m_h_1', axis:'movement', trait:'hyper', adult:'人混みや揺れで酔いやすい' },
+        { id:'m_h_2', axis:'movement', trait:'hyper', adult:'急な動きや加速が苦手' },
+        { id:'m_y_1', axis:'movement', trait:'hypo',  adult:'スピードや回転を楽しめる' },
+        { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて、つい走ったりジャンプしたくなる' },
       ];
-
-      const COMMENT_BOOK = {
-        hearing: {
-          hyper: { strong:['微かな音の変化に気づける観察力'], challenge:['人混みや大音量の場所で疲れやすい'], tips:['ノイズキャンセリング/耳栓の活用','静かな席や時間帯を選ぶ','通知音量の微調整'] },
-          hypo:  { strong:['賑やかな環境でも集中しやすい'], challenge:['呼びかけやアナウンスを聞き逃しやすい'], tips:['バイブ/光での通知','視覚サインの併用','重要連絡は文字ベースで受け取る'] }
-        },
-        vision: {
-          hyper: { strong:['細かな差異にすぐ気づける洞察力'], challenge:['強い光/ちらつきで疲れやすい'], tips:['遮光/偏光レンズ','画面の明るさ/配色を調整','紙面作業をこまめに挟む'] },
-          hypo:  { strong:['暗所で落ち着いて動ける'], challenge:['細部の変化に気づきにくい'], tips:['コントラスト強調','要点のマーキング','タスク前のチェックリスト'] }
-        },
-        touch: {
-          hyper: { strong:['素材/肌触りへの審美眼'], challenge:['タグ/チクチク/ベタつきがストレス'], tips:['肌当たりの良い素材選び','タグカット/裏返し着用','ウェットティッシュ常備'] },
-          hypo:  { strong:['圧や重みで落ち着きやすい'], challenge:['小さなケガや汚れに気づきにくい'], tips:['定期的なボディチェック','加重ブランケットの活用','触覚入力のバランス'] }
-        },
-        smell: {
-          hyper: { strong:['香りの違いを見分ける能力'], challenge:['香料が混ざる場所が苦手'], tips:['マスク/アロマでリセット','換気の良い席を確保','香り強い洗剤を避ける'] },
-          hypo:  { strong:['強い匂いにも冷静'], challenge:['危険な臭いに気づきにくい'], tips:['期限表示の確認習慣','他者に確認を頼む','におい以外の衛生指標を使う'] }
-        },
-        taste: {
-          hyper: { strong:['味の違いを楽しむ繊細さ'], challenge:['食べられる品目が限られやすい'], tips:['食感/香り単位での置き換え','調味/調理法の微調整','小さな一歩の試食'] },
-          hypo:  { strong:['刺激的な味を楽しむ冒険心'], challenge:['塩分/辛味の過剰に注意'], tips:['栄養バランス表の活用','味以外（温度/見た目）の満足要素を増やす','医療的制限がある場合は専門家相談'] }
-        },
-        tempPain: {
-          hyper: { strong:['体調変化の早期察知'], challenge:['気温/痛みの変化で消耗しやすい'], tips:['重ね着/冷温アイテム','作業時間を短ブロック化','こまめな休憩'] },
-          hypo:  { strong:['幅広い環境に適応できる'], challenge:['熱中症/低体温に気づきにくい'], tips:['タイマーで水分/休憩を促す','活動ログで体調を可視化','危険温度の客観指標を使う'] }
-        },
-        movement: {
-          hyper: { strong:['バランス変化に敏感'], challenge:['乗り物酔い/人混みがつらい'], tips:['混雑回避ルート','安定した姿勢/視点固定','乗り物は前方/風通し良い席'] },
-          hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
-        },
-      };
 
       /* === 140字向けショート要約 === */
       const SHORT_SUMMARY = {
@@ -228,45 +195,40 @@ const BANK = [
       function baseURL(){
         return location.origin + location.pathname.replace(/index\.html$/,'');
       }
+      // 傾向の見出し（ライト表現）
+      function tendencyLabel(overall, dominant){
+        if (overall==='balanced') return 'バランス型の傾向かも？';
+        const axis = AXES.find(a=>a.key===dominant)?.label || '';
+        return `${axis}${overall==='hyper'?'過敏':'鈍麻'}の傾向かも？`;
+      }
 
-      /* === 改行入り：140字に収める投稿文 === */
+      /* === 改行入り：140字に収める投稿文（傾向表現） === */
       function buildShortShareText({title, level, overall, dominant}){
         const url = baseURL();
         const urlLen = 23; // XのURL換算長
-        const axis = AXES.find(a=>a.key===dominant)?.label || 'バランス型';
         const line1 = '【感覚クエスト⚔️診断結果】';
         const line2 = `称号「${title}」 Lv${String(level).padStart(2,'0')}`;
-        const line3 = (overall==='balanced')
-          ? getShortSummary(overall, dominant)
-          : `いちばん強いのは「${axis}」。${getShortSummary(overall, dominant)}`;
+        const line3 = tendencyLabel(overall, dominant) + (overall==='balanced' ? '' : ' ' + getShortSummary(overall, dominant).split('／')[0]);
         const line4 = 'やってみる▶ ' + url;
         const tag  = ' #KANKAKUクエスト';
         const nl = '\n';
         let text = [line1, line2, line3, line4].join(nl) + tag;
 
-        // 140字内に調整（URLは固定長23として計算）
+        // 140字調整（URLは固定長23で計算）
         const limit = 140;
         const effLen = t => t.length - (url.length - urlLen);
         if (effLen(text) <= limit) return text;
-        // 1) ハッシュタグを外す
+        // ハッシュタグ省略
         text = [line1, line2, line3, line4].join(nl);
         if (effLen(text) <= limit) return text;
-        // 2) line3を短縮
-        const short3 = (overall==='balanced')
-          ? '偏りは少なめ。感じ方は状況次第。'
-          : `最も強い「${axis}」。${getShortSummary(overall, dominant).split('／')[0]}`;
-        text = [line1, line2, short3, line4].join(nl);
-        if (effLen(text) <= limit) return text;
-        // 3) さらに圧縮（axisのみ）
-        const tiny3 = (overall==='balanced') ? '偏りは少なめ。' : `最も強い「${axis}」。`;
+        // line3圧縮
+        const tiny3 = tendencyLabel(overall, dominant);
         text = [line1, line2, tiny3, line4].join(nl);
         return text;
       }
 
       /* === 非線形ウェイト（1・2は軽め） === */
-      // 0→0.00 / 1→0.08 / 2→0.28 / 3→0.65 / 4→1.00
       const LIKERT_WEIGHT = [0, 0.08, 0.28, 0.65, 1.00];
-
       const LIKERT = [
         { v:0, label:'まったくない' },
         { v:1, label:'すこし' },
@@ -318,7 +280,7 @@ const BANK = [
                 <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
                 <div class="small">${index+1} / ${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">${q.adult}</div> <!-- 質問とボタンの間に余白 -->
+              <div style="font-size:18px; margin-bottom:20px">${q.adult}</div>
               <div class="likert" id="likert"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
                 <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
@@ -358,14 +320,14 @@ const BANK = [
           titleObj = { t:'バランス型：ノーマライザー', role:'ノーマライザー' };
           axisLabel = 'バランス型';
           roleImg = IMAGES.balanced;
-          level = lvBalanced;       // バランス度（0–99）
+          level = lvBalanced;
           lvLabel = 'Lv（バランス度）';
         } else {
           const axis = AXES.find(a=>a.key===dominant);
           axisLabel = axis ? axis.label : '';
           titleObj = TITLES[overall][dominant];
           roleImg = overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant];
-          level = lvDominant;       // 代表軸の強さ（0–99）
+          level = lvDominant;
         }
 
         let headNote = '';
@@ -387,6 +349,10 @@ const BANK = [
               <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
+              </div>
+              <div class="disclaimer">
+                ※ この結果は自己回答に基づく<strong>簡易チェック</strong>です。<br>
+                医学的な診断・評価の提供を目的としたものではありません。体調や生活に困りごとがある場合は、医療・専門機関等へご相談ください。
               </div>
             </div>
 
@@ -433,7 +399,7 @@ const BANK = [
             </div>
           </div>`;
 
-        // チャート
+        // レーダーチャート
         const ctx = document.getElementById('radar');
         new Chart(ctx, {
           type: 'radar',
@@ -448,9 +414,7 @@ const BANK = [
         });
 
         // シェア（改行入り140字）
-        const shortText = buildShortShareText({
-          title: titleObj.t, level, overall, dominant
-        });
+        const shortText = buildShortShareText({ title: titleObj.t, level, overall, dominant });
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
           window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank');
@@ -479,34 +443,29 @@ const BANK = [
       }
 
       /* ================ ロジック ================ */
-function pickQuestions(count){
-  // 軸ごとに過敏2・鈍麻2を集める
-  const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
-  BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
+      function pickQuestions(count){
+        // 軸ごとに過敏2・鈍麻2を集める
+        const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
+        BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
 
-  const picked = [];
-  AXES.forEach(ax=>{
-    const H = byAxis[ax.key].hyper.slice(0,2);
-    const Y = byAxis[ax.key].hypo.slice(0,2);
-    picked.push(...H, ...Y);
-  });
-  return shuffle(picked).slice(0, count); // 念のためcountで切る
-}
-
-// フィッシャー–イェーツ
-function shuffle(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-
-// p=0–100 を Lv=0–99 に変換（少し緩やか）
-const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
-
+        const picked = [];
+        AXES.forEach(ax=>{
+          const H = byAxis[ax.key].hyper.slice(0,2);
+          const Y = byAxis[ax.key].hypo.slice(0,2);
+          picked.push(...H, ...Y);
+        });
+        return shuffle(picked).slice(0, count);
+      }
+      function shuffle(arr){
+        const a = arr.slice();
+        for(let i=a.length-1;i>0;i--){
+          const j = Math.floor(Math.random()*(i+1));
+          [a[i],a[j]] = [a[j],a[i]];
+        }
+        return a;
+      }
+      // p=0–100 → Lv=0–99（少し緩やか）
+      const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
 
       // スコア計算（非線形ウェイト）
       function calcScores(questions, answers){
@@ -514,7 +473,7 @@ const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) *
         questions.forEach(q=>{
           const v = answers[q.id];
           if(v==null) return;
-          const w = LIKERT_WEIGHT[v] ?? 0; // 非線形
+          const w = LIKERT_WEIGHT[v] ?? 0;
           if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
           else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
         });
@@ -531,7 +490,6 @@ const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) *
         const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
         const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
 
-        // バランス判定を少し広めに
         const EPS = 6;   // 平均差のしきい値（%）
         const LOW = 25;  // 低強度のしきい値
         let overall;
@@ -545,7 +503,7 @@ const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) *
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
-        // Lv計算
+        // Lv
         const dom = radar.find(r=>r.axisKey===dominantKey);
         const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
