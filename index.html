@@ -98,7 +98,7 @@
           tempPain:  'images/job-tempPain-hypo.png',
           movement:  'images/job-movement-hypo.png'
         },
-        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー
+        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー（ファイル名はご指定のまま）
       };
 
       const TITLES = {
@@ -133,7 +133,6 @@
       ];
 
       /* ================ 質問（28問） ================ */
-      // すべて“当てはまり度”で評価できる表現に統一
       const BANK = [
         // ── 聴覚 ──
         { id:'h_h_1', axis:'hearing', trait:'hyper', adult:'店内やオフィスのざわめきで集中が途切れやすい' },
@@ -209,7 +208,7 @@
         },
       };
 
-      /* === 140字向けショート要約（シェア用） === */
+      /* === シェア用ショート要約 === */
       const SHORT_SUMMARY = {
         hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい',         hypo:'弱い音に気づきにくい／呼びかけを見落としがち' },
         vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',             hypo:'暗所の変化に気づきにくい／細かな差を見落としやすい' },
@@ -227,14 +226,11 @@
       function baseURL(){
         return location.origin + location.pathname.replace(/index\.html$/,'');
       }
-      // 傾向の見出し（ライト表現）
       function tendencyLabel(overall, dominant){
         if (overall==='balanced') return 'バランス型の傾向かも？';
         const axis = AXES.find(a=>a.key===dominant)?.label || '';
         return `${axis}${overall==='hyper'?'過敏':'鈍麻'}の傾向かも？`;
       }
-
-      /* === 改行入り：140字に収める投稿文（傾向表現） === */
       function buildShortShareText({title, level, overall, dominant}){
         const url = baseURL();
         const urlLen = 23; // XのURL換算長
@@ -246,17 +242,14 @@
         const nl = '\n';
         let text = [line1, line2, line3, line4].join(nl) + tag;
 
-        // 140字調整（URLは固定長23で計算）
+        // 140字調整（URLは固定長23）
         const limit = 140;
         const effLen = t => t.length - (url.length - urlLen);
         if (effLen(text) <= limit) return text;
-        // ハッシュタグ省略
         text = [line1, line2, line3, line4].join(nl);
         if (effLen(text) <= limit) return text;
-        // line3圧縮
         const tiny3 = tendencyLabel(overall, dominant);
-        text = [line1, line2, tiny3, line4].join(nl);
-        return text;
+        return [line1, line2, tiny3, line4].join(nl);
       }
 
       /* === 非線形ウェイト（1・2は軽め） === */
@@ -277,7 +270,7 @@
       function renderStart(){
         app.innerHTML = `
           <div class="grid">
-            <div class="card hero"><img src="\${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
+            <div class="card hero"><img src="${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
             <div class="card" style="text-align:center">
               <h1>あなたの感覚ジョブ診断</h1>
               <p class="muted">
@@ -306,16 +299,16 @@
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
           <div class="grid">
-            <div class="progress"><div style="width:\${progress}%"></div></div>
+            <div class="progress"><div style="width:${progress}%"></div></div>
             <div class="card" style="text-align:center">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
-                <div><span class="badge">\${AXES.find(a=>a.key===q.axis).label}</span></div>
-                <div class="small">\${index+1} / \${total}</div>
+                <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
+                <div class="small">${index+1} / ${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">\${q.adult}</div>
+              <div style="font-size:18px; margin-bottom:20px">${q.adult}</div>
               <div class="likert" id="likert"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
-                <button class="button" id="prevBtn" \${index===0?'disabled':''}>もどる</button>
+                <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
                 <span></span>
               </div>
             </div>
@@ -347,38 +340,41 @@
         const s = calcScores(qs, answers);
         const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced } = s;
 
-        let titleObj = null, axisLabel = null, roleImg = null, level = null, lvLabel = 'Lv';
+        let titleObj, axisLabel, roleImg, level, lvLabel = 'Lv';
         if (overall === 'balanced') {
           titleObj = { t:'バランス型：ノーマライザー', role:'ノーマライザー' };
           axisLabel = 'バランス型';
           roleImg = IMAGES.balanced;
-          level = lvBalanced;
+          level = lvBalanced;             // 0–99
           lvLabel = 'Lv（バランス度）';
         } else {
           const axis = AXES.find(a=>a.key===dominant);
           axisLabel = axis ? axis.label : '';
           titleObj = TITLES[overall][dominant];
           roleImg = overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant];
-          level = lvDominant;
+          level = lvDominant;             // 0–99
         }
+
+        // 先にサブ片を作って差し込む（入れ子のテンプレは使わない）
+        const roleImgHTML = roleImg ? '<img class="role" src="'+roleImg+'" alt="'+titleObj.t+'">' : '';
 
         let headNote = '';
         if (overall === 'balanced' && maxAny <= 25) {
           headNote = '今回は大きな偏りは見つかりませんでした。状況や体調によって感じ方がゆるやかに変わる、柔軟タイプかもしれません。';
         } else if (overall === 'balanced') {
-          headNote = `大きな偏りはありませんでした。比較的「\${AXES.find(a=>a.key===dominant)?.label ?? '—'}」が気になりやすいかもしれません。`;
+          headNote = `大きな偏りはありませんでした。比較的「${AXES.find(a=>a.key===dominant)?.label ?? '—'}」が気になりやすいかもしれません。`;
         } else {
-          headNote = `いちばん強く特徴が出たのは「\${axisLabel}」。全体としては<strong>\${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
+          headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
         }
 
         app.innerHTML = `
           <div class="grid">
             <div class="card center">
               <h2>結果</h2>
-              <div class="muted">\${headNote}</div>
-              \${roleImg ? `<img class="role" src="\${roleImg}" alt="\${titleObj.t}">` : ``}
-              <div style="font-weight:700; margin-top:6px">称号：\${titleObj.t}</div>
-              <div class="level-display">\${lvLabel}：<span>Lv\${String(level).padStart(2,'0')}</span>　ジョブ：\${titleObj.role}</div>
+              <div class="muted">${headNote}</div>
+              ${roleImgHTML}
+              <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
+              <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
               </div>
@@ -391,11 +387,11 @@
             <div class="card">
               <h3>各特性のレベル</h3>
               <div class="level-grid">
-                \${renderAxisLevelBadges(radar)}
+                ${renderAxisLevelBadges(radar)}
               </div>
             </div>
 
-            \${ overall==='balanced' && maxAny<=25 ? renderLowOverallCard() : renderAxisFeedback(radar) }
+            ${ overall==='balanced' && maxAny<=25 ? renderLowOverallCard() : renderAxisFeedback(radar) }
 
             <div class="card share">
               <div style="font-weight:700;">結果をシェア</div>
@@ -413,8 +409,8 @@
               <div style="display:grid; gap:16px; grid-template-columns:1fr; align-items:start">
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
-                  <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（\${SEMINAR_DATE} オンライン）</h3>
-                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：\${titleObj.t}」</strong>（\${lvLabel}：Lv\${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
+                  <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
+                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>（${lvLabel}：Lv${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
                   <ul>
                     <li>感覚過敏が学校生活に与える影響と見立て方（音・光・衣服・におい・食事・温度/痛み・動き）</li>
                     <li>家で今日からできる環境調整と声かけ（朝の準備、通学/在宅の工夫）</li>
@@ -424,7 +420,7 @@
                   <p><strong>特別講師：加藤 路瑛（感覚過敏研究所 所長）</strong><br>
                      <strong>共催・進行：まなクロ にっしー（元教員／不登校支援者）</strong></p>
                   <div style="margin-top:10px">
-                    <a class="button primary" target="_blank" href="\${SEMINAR_URL}">申し込みページ（Googleフォーム）</a>
+                    <a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページ（Googleフォーム）</a>
                   </div>
                 </div>
               </div>
@@ -449,11 +445,11 @@
         const shortText = buildShortShareText({ title: titleObj.t, level, overall, dominant });
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
-          window.open(`https://twitter.com/intent/tweet?text=\${t}`,'_blank');
+          window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank');
         };
         document.getElementById('shareFBlink').onclick = () => {
           const u = encodeURIComponent(baseURL());
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=\${u}`,'_blank');
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
         };
 
         document.getElementById('retryBtn').onclick = () => { qs=[]; answers={}; index=0; renderStart(); };
@@ -464,19 +460,18 @@
       function renderAxisLevelBadges(radar){
         return radar.map(d=>{
           const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-        const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
-          return `
-            <div class="level-item">
-              <div><strong>\${d.axis}</strong><span class="chip">\${mode}</span></div>
-              <div class="lv">Lv\${String(lv).padStart(2,'0')}</div>
-            </div>
-          `;
+          const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
+          return (
+            '<div class="level-item">' +
+              '<div><strong>' + d.axis + '</strong><span class="chip">' + mode + '</span></div>' +
+              '<div class="lv">Lv' + String(lv).padStart(2,'0') + '</div>' +
+            '</div>'
+          );
         }).join('');
       }
 
       /* ================ ロジック ================ */
       function pickQuestions(count){
-        // 軸ごとに過敏2・鈍麻2を集める
         const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
         BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
 
@@ -522,8 +517,8 @@
         const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
         const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
 
-        const EPS = 6;   // 平均差のしきい値（%）
-        const LOW = 25;  // 低強度のしきい値
+        const EPS = 6;   // 平均差しきい値
+        const LOW = 25;  // 低強度しきい値
         let overall;
         if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
           overall = 'balanced';
@@ -548,37 +543,40 @@
         const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
                             .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
         const list = (picks.length? picks: scored.sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo)).slice(0,3));
+
         return list.map(s=>{
           const mode = s.hyper> s.hypo ? 'hyper' : (s.hypo> s.hyper? 'hypo':'mix');
           const book = COMMENT_BOOK[s.key];
-          const strong = mode==='mix'? [...book.hyper.strong,...book.hypo.strong].slice(0,2) : book[mode].strong;
-          const challenge = mode==='mix'? [...book.hyper.challenge,...book.hypo.challenge].slice(0,2) : book[mode].challenge;
-          const tips = mode==='mix'? [...book.hyper.tips,...book.hypo.tips].slice(0,3) : book[mode].tips;
-          return `
-            <div class="card">
-              <h3>\${s.label}</h3>
-              <div class="small muted">過敏:\${s.hyper}% / 鈍麻:\${s.hypo}%</div>
-              <div class="cols" style="margin-top:8px">
-                <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>\${strong.map(x=>`<li>\${x}</li>`).join('')}</ul></div>
-                <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>\${challenge.map(x=>`<li>\${x}</li>`).join('')}</ul></div>
-                <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>\${tips.map(x=>`<li>\${x}</li>`).join('')}</ul></div>
-              </div>
-            </div>`;
+          const strong = mode==='mix'? book.hyper.strong.concat(book.hypo.strong).slice(0,2) : book[mode].strong;
+          const challenge = mode==='mix'? book.hyper.challenge.concat(book.hypo.challenge).slice(0,2) : book[mode].challenge;
+          const tips = mode==='mix'? book.hyper.tips.concat(book.hypo.tips).slice(0,3) : book[mode].tips;
+
+          return (
+            '<div class="card">' +
+              '<h3>' + s.label + '</h3>' +
+              '<div class="small muted">過敏:' + s.hyper + '% / 鈍麻:' + s.hypo + '%</div>' +
+              '<div class="cols" style="margin-top:8px">' +
+                '<div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>' + strong.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
+                '<div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>' + challenge.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
+                '<div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>' + tips.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
+              '</div>' +
+            '</div>'
+          );
         }).join('');
       }
 
       function renderLowOverallCard(){
-        return `
-          <div class="card">
-            <h3>今回のまとめ</h3>
-            <p class="muted">全体的に大きな偏りは見られませんでした。日によって「少し気になる」「今日は平気」など、ゆるやかな変化があるタイプかもしれません。</p>
-            <ul>
-              <li>困りごとが少ない時は、そのままの環境でOK</li>
-              <li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>
-              <li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>
-            </ul>
-          </div>
-        `;
+        return (
+          '<div class="card">' +
+            '<h3>今回のまとめ</h3>' +
+            '<p class="muted">全体的に大きな偏りは見られませんでした。日によって「少し気になる」「今日は平気」など、ゆるやかな変化があるタイプかもしれません。</p>' +
+            '<ul>' +
+              '<li>困りごとが少ない時は、そのままの環境でOK</li>' +
+              '<li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>' +
+              '<li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>' +
+            '</ul>' +
+          '</div>'
+        );
       }
 
       /* ================ 初期化（ロゴでトップ） ================ */
