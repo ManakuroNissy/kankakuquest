@@ -21,8 +21,6 @@
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
       .button.success{background:var(--good); color:#fff; border-color:transparent} /* 子どもボタンを緑 */
-      .button.x{background:#111; color:#fff; border-color:#111}
-      .button.fb{background:#1877F2; color:#fff; border-color:#1877F2}
       .button[disabled]{opacity:.5; cursor:not-allowed}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
@@ -36,7 +34,7 @@
       .cols{display:grid; gap:16px}
       @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
       .small{font-size:12px; color:#475569}
-      .muted{color:var(--muted)}
+      .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
       img.role{width:160px; height:auto; display:block; margin:8px auto 0}
@@ -80,7 +78,6 @@
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
 
-      // 画像パス（hyper/hypo で分岐）
       const IMAGES = {
         title: 'images/title-image.png',
         rolesHyper: {
@@ -104,7 +101,6 @@
         balanced: 'images/job-nomal.png' // バランス型：ノーマライザー
       };
 
-      // 称号テーブル
       const TITLES = {
         hyper: {
           hearing:  { t: 'エルフ耳の斥候（スカウト）', role: 'スカウト' },
@@ -198,6 +194,71 @@
           hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
         },
       };
+
+      // === 140字向けショート要約 ===
+      const SHORT_SUMMARY = {
+        hearing: {
+          hyper: '小さな音を拾いやすい／大きな音がつらい',
+          hypo:  'にぎやかでも集中しやすい／呼びかけを見落としがち'
+        },
+        vision: {
+          hyper: '細部に気づく／強い光やちらつきが苦手',
+          hypo:  '暗所に強い／細かな変化は見落としやすい'
+        },
+        touch: {
+          hyper: '素材感に敏感／チクチクやベタつきが苦手',
+          hypo:  '圧刺激で落ち着く／小さなケガに気づきにくい'
+        },
+        smell: {
+          hyper: '香りの差に鋭い／混ざったにおいが苦手',
+          hypo:  '強いにおいも平気／危険なにおいに気づきにくい'
+        },
+        taste: {
+          hyper: '味の違いに敏感／食べられる幅が狭くなりがち',
+          hypo:  '刺激的な味が得意／塩分や辛味が多くなりがち'
+        },
+        tempPain: {
+          hyper: '変化を早く察知／気温や痛みで消耗しやすい',
+          hypo:  '環境にタフ／暑さ寒さに気づくのが遅れがち'
+        },
+        movement: {
+          hyper: '揺れに敏感／人混みや乗り物酔いが出やすい',
+          hypo:  'スピードに強い／安全確認が遅れがち'
+        },
+        balanced: '偏りは少なめ。感じ方は状況次第。'
+      };
+      function getShortSummary(overall, dominant){
+        if (overall==='balanced') return SHORT_SUMMARY.balanced;
+        return SHORT_SUMMARY[dominant][overall];
+      }
+      function baseURL(){
+        return location.origin + location.pathname.replace(/index\.html$/,'');
+      }
+      // 140字におさめる投稿文（超過時は段階的に短縮）
+      function buildShortShareText({title, level, overall, dominant}){
+        const url = baseURL();
+        const urlLen = 23; // X上のURL換算長
+        const axis = AXES.find(a=>a.key===dominant)?.label || 'バランス型';
+        const head = `称号「${title}」Lv${String(level).padStart(2,'0')}｜`;
+        const body = (overall==='balanced')
+          ? getShortSummary(overall, dominant)
+          : `いちばん強いのは「${axis}」。${getShortSummary(overall, dominant)}`;
+        const cta = ' やってみる▶ ';
+        const tag = ' #KANKAKUクエスト';
+        let text = head + body + cta + url + tag;
+
+        const limit = 140;
+        const effLen = t => t.length - (url.length - urlLen); // URL固定長換算
+        if (effLen(text) > limit) text = head + body + ' ' + url + tag;
+        if (effLen(text) > limit) text = head + body + ' ' + url;
+        if (effLen(text) > limit) {
+          const shorter = (overall==='balanced')
+            ? '偏りは少なめ。感じ方は状況次第。'
+            : `最も強い「${axis}」。${getShortSummary(overall, dominant).split('／')[0]}`;
+          text = head + shorter + ' ' + url;
+        }
+        return text;
+      }
 
       const LIKERT = [
         { v:0, label:'まったくない' },
@@ -332,11 +393,8 @@
         } else if (overall === 'balanced') {
           headNote = `大きな偏りはありませんでした。比較的「${AXES.find(a=>a.key===dominant)?.label ?? '—'}」が気になりやすいかもしれません。`;
         } else {
-          headNote = `いちばん特徴が強く出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
+          headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
         }
-
-        const payload = { v:2, overall, dominant, axisLabel, title:titleObj.t, radar, level, lvLabel };
-        const shareUrl = buildShareUrl(payload);
 
         app.innerHTML = `
           <div class="grid">
@@ -363,13 +421,11 @@
             <div class="card share">
               <div style="font-weight:700;">結果をシェア</div>
               <div class="buttons">
-                <button id="shareXimg"  class="button x">X に画像付きで投稿</button>
-                <button id="shareXlink" class="button">X（テキスト＋リンク）</button>
-                <button id="shareFBimg" class="button fb">Facebook 画像付き</button>
-                <button id="shareFBlink" class="button">Facebook（リンクのみ）</button>
+                <button id="shareXlink"  class="button">X でシェア</button>
+                <button id="shareFBlink" class="button">Facebook でシェア</button>
               </div>
-              <div class="small muted" style="text-align:center;max-width:760px">
-                画像付き投稿は対応端末で動作します。できない場合は画像を保存しますので、各SNSでアップロードしてください。
+              <div class="small muted" style="text-align:center">
+                140字の短い一文＋短いリンクで共有します。
               </div>
               <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
             </div>
@@ -410,42 +466,21 @@
           options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
         });
 
-        // 共有テキスト（やってみたくなるトーン）
-        const axisLabelForShare = axisLabel || 'バランス型';
-        const baseText1 = `感覚の特性を調べてみた｜称号「${titleObj.t}」 Lv${String(level).padStart(2,'0')}`;
-        const baseText2 = `自分はどっち寄り？ 過敏？鈍麻？ 自分の感覚特性を調べてみよう！`;
-        const shareText = `${baseText1}\n${baseText2}\n詳しくはこちら>> ${shareUrl}\n#KANKAKUクエスト #感覚過敏`;
+        // 短文シェア
+        const shortText = buildShortShareText({
+          title: titleObj.t, level, overall, dominant
+        });
 
-        // 画像付き投稿の共通処理
-        const shareImageFlow = async () => {
-          const img = await buildShareImage({
-            titleText: `${titleObj.t}  Lv${String(level).padStart(2,'0')}`,
-            axisLabel: axisLabelForShare,
-            leaning: (overall==='balanced' ? 'バランス' : ( (hyperAvg>=hypoAvg)?'過敏':'鈍麻' )),
-            radarCanvas: ctx,
-            roleImgSrc: (overall==='balanced'
-                          ? IMAGES.balanced
-                          : (overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant]))
-          });
-          await shareOrDownloadImage(img.blob, 'kankaku-quest.png', shareText);
-        };
-
-        // X: テキスト+リンク
+        // X（テキスト＋短リンク）
         document.getElementById('shareXlink').onclick = () => {
-          const t = encodeURIComponent(`${baseText1}\n${baseText2}\n#KANKAKUクエスト #感覚過敏`);
-          const u = encodeURIComponent(shareUrl);
-          window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`,'_blank');
+          const t = encodeURIComponent(shortText);
+          window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank');
         };
-        // X: 画像付き
-        document.getElementById('shareXimg').onclick = () => { shareImageFlow(); };
-
-        // FB: リンクのみ
+        // Facebook（URLシェアのみ）
         document.getElementById('shareFBlink').onclick = () => {
-          const u = encodeURIComponent(shareUrl);
+          const u = encodeURIComponent(baseURL());
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
         };
-        // FB: 画像付き
-        document.getElementById('shareFBimg').onclick = () => { shareImageFlow(); };
 
         document.getElementById('retryBtn').onclick = () => { who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); };
         window.scrollTo({top:0, behavior:'smooth'});
@@ -534,153 +569,6 @@
         return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced };
       }
 
-      /* ================ 共有ビュー描画 ================ */
-      function renderResultFromPayload(payload){
-        const { overall, dominant, axisLabel, title, radar, level, lvLabel } = payload;
-        const roleImg = (overall==='balanced')
-          ? IMAGES.balanced
-          : (overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant]);
-        app.innerHTML = `
-          <div class="grid">
-            <div class="card center">
-              <h2>結果（共有）</h2>
-              ${roleImg ? `<img class="role" src="${roleImg}" alt="${title}">` : ``}
-              <div style="font-weight:700; margin-top:6px">称号：${title}</div>
-              <div class="small">${lvLabel||'Lv'}：<span style="font-weight:700">Lv${String(level??'--').padStart(2,'0')}</span></div>
-              <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
-                <canvas id="radar"></canvas>
-              </div>
-              <div style="margin-top:10px">
-                <button id="retryBtn2" class="button primary">自分でも調べる</button>
-              </div>
-            </div>
-            <div class="card">
-              <h3>各特性のレベル</h3>
-              <div class="level-grid">
-                ${renderAxisLevelBadges(radar)}
-              </div>
-            </div>
-          </div>`;
-        const ctx = document.getElementById('radar');
-        new Chart(ctx, {
-          type: 'radar',
-          data: {
-            labels: radar.map(d=>d.axis),
-            datasets: [
-              { label:'過敏', data: radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
-              { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
-            ]
-          },
-          options: { scales:{ r:{ suggestedMin:0, suggestedMax:100 } }, plugins:{ legend:{position:'bottom'} } }
-        });
-        document.getElementById('retryBtn2').onclick=()=>{who=null; mode=null; renderStart();};
-      }
-
-      /* ================ 共有URL/画像 ================ */
-      function buildShareUrl(obj){
-        const json = JSON.stringify(obj);
-        const b64 = btoa(unescape(encodeURIComponent(json)))
-                    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-        const base = location.origin + location.pathname.replace(/index\.html$/,'');
-        return `${base}?r=${b64}`;
-      }
-      function parseSharePayload(){
-        const m = location.search.match(/[?&]r=([^&]+)/);
-        if(!m) return null;
-        try{
-          const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/');
-          const pad = b64.length%4===2?'==':(b64.length%4===3?'=':'');
-          const json = decodeURIComponent(escape(atob(b64+pad)));
-          return JSON.parse(json);
-        }catch{ return null; }
-      }
-
-      async function buildShareImage({ titleText, axisLabel, leaning, radarCanvas, roleImgSrc }){
-        const W=1080, H=1080;
-        const c = document.createElement('canvas'); c.width=W; c.height=H;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
-
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 56px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillText('KANKAKUクエスト', 60, 100);
-        ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillText('あなたの感覚ジョブ診断', 60, 145);
-
-        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 2;
-        roundRect(ctx, 60, 180, W-120, H-260, 24); ctx.stroke();
-
-        ctx.font = 'bold 44px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillText(`称号：${titleText}`, 90, 250);
-
-        ctx.font = '28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillText(`特徴：${axisLabel}／傾向：${leaning}`, 90, 295);
-
-        if(roleImgSrc){
-          const roleImg = await loadImage(roleImgSrc);
-          const roleBoxW = 360, roleBoxH = 360;
-          const roleX = 100, roleY = 330;
-          const {dw:riw, dh:rih} = fitContain(roleImg.width, roleImg.height, roleBoxW, roleBoxH);
-          ctx.drawImage(roleImg, roleX + (roleBoxW-riw)/2, roleY + (roleBoxH-rih)/2, riw, rih);
-        }
-
-        const radarDataUrl = radarCanvas.toDataURL('image/png');
-        const radarImg = await loadImage(radarDataUrl);
-        const radarW=460, radarH=460, radarX=520, radarY=300;
-        ctx.drawImage(radarImg, radarX, radarY, radarW, radarH);
-
-        ctx.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillStyle = '#334155';
-        ctx.fillText('#KANKAKUクエスト  #感覚過敏', 90, 730);
-
-        ctx.font = '20px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText('by MANAKURO', 90, 1010);
-
-        const blob = await new Promise(res => c.toBlob(b => res(b), 'image/png'));
-        const url  = URL.createObjectURL(blob);
-        return { blob, url };
-      }
-
-      async function shareOrDownloadImage(blob, filename, text){
-        const file = new File([blob], filename, {type:'image/png'});
-        if(navigator.canShare && navigator.canShare({ files:[file] })){
-          try{
-            await navigator.share({ files:[file], text });
-            return;
-          }catch(e){ /* キャンセル等は無視してDLにフォールバック */ }
-        }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a); a.click(); a.remove();
-        try{
-          await navigator.clipboard.writeText(text);
-          alert('シェア用画像を保存しました。投稿文もコピー済みです。各SNSで画像を添付して貼り付けてください。');
-        }catch{
-          alert('シェア用画像を保存しました。投稿文は手動でコピーしてください。');
-        }
-      }
-
-      function roundRect(ctx, x, y, w, h, r){
-        ctx.beginPath();
-        ctx.moveTo(x+r, y);
-        ctx.arcTo(x+w, y,   x+w, y+h, r);
-        ctx.arcTo(x+w, y+h, x,   y+h, r);
-        ctx.arcTo(x,   y+h, x,   y,   r);
-        ctx.arcTo(x,   y,   x+w, y,   r);
-        ctx.closePath();
-      }
-      function fitContain(sw, sh, dw, dh){
-        const s = Math.min(dw/sw, dh/sh);
-        return { dw: Math.round(sw*s), dh: Math.round(sh*s) };
-      }
-      function loadImage(src){
-        return new Promise((ok, ng)=>{
-          const i = new Image(); i.crossOrigin='anonymous'; i.onload=()=>ok(i); i.onerror=ng; i.src = src;
-        });
-      }
-
       function renderAxisFeedback(radar){
         const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
         const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
@@ -719,15 +607,12 @@
         `;
       }
 
-      /* ================ 初期化（ロゴでトップ/共有リンク対応） ================ */
+      /* ================ 初期化（ロゴでトップ） ================ */
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
         document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); who=null; mode=null; qs=[]; answers={}; index=0; renderStart(); });
-
-        const payload = parseSharePayload();
-        if(payload) renderResultFromPayload(payload);
-        else renderStart();
+        renderStart();
       });
     </script>
   </body>
