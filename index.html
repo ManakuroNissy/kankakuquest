@@ -220,7 +220,7 @@
         const url = baseURL();
         const urlLen = 23; // XのURL換算長
         const axis = AXES.find(a=>a.key===dominant)?.label || 'バランス型';
-        const line1 = '感覚診断結果';
+        const line1 = '【感覚クエスト⚔️診断結果】';
         const line2 = `称号「${title}」 Lv${String(level).padStart(2,'0')}`;
         const line3 = (overall==='balanced')
           ? getShortSummary(overall, dominant)
