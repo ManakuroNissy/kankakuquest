@@ -22,12 +22,12 @@
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
       .button[disabled]{opacity:.5; cursor:not-allowed}
       /* ブランドカラーのシェアボタン */
-      .button.x  { background:#000;    color:#fff; border-color:#000 }
+      .button.x  { background:#000;   color:#fff; border-color:#000 }
       .button.fb { background:#1877F2; color:#fff; border-color:#1877F2 }
       .button.x:hover,.button.fb:hover{filter:brightness(.95)}
       .grid{display:grid; gap:16px}
       .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
-      .hero img{width:70%; max-width:800px; margin:0 auto; display:block} /* タイトル画像70% */
+      .hero img{width:70%; max-width:800px; margin:0 auto; display:block}
       .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
       .progress > div{height:100%; background:var(--brand2)}
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
@@ -40,8 +40,9 @@
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
-      img.role{width:240px; height:auto; display:block; margin:8px auto 0} /* 1.5倍 */
-      .level-display{font-size:20px; font-weight:700; margin-top:6px}     /* レベル大きく */
+      img.role{width:240px; height:auto; display:block; margin:8px auto 0}
+      .level-display{font-size:20px; font-weight:700; margin-top:6px}
+      .role-comment{margin-top:6px; color:#374151}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
       .cta{background:#eff6ff; border:1px solid #bfdbfe}
       .start-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:12px}
@@ -98,7 +99,7 @@
           tempPain:  'images/job-tempPain-hypo.png',
           movement:  'images/job-movement-hypo.png'
         },
-        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー（ファイル名はご指定のまま）
+        balanced: 'images/job-nomal.png' // バランス型：ノーマライザー
       };
 
       const TITLES = {
@@ -122,6 +123,30 @@
         },
       };
 
+      /* ▼▼ ここが今回の“SNS用コメント” ▼▼ */
+      const ROLE_COMMENTS = {
+        hyper: {
+          hearing:  '小さな音も聞き逃さない探索の達人。静寂の守護者。',
+          vision:   '光や動きの変化を見抜く鋭視のメイジ。隠し扉もお手の物。',
+          touch:    '風や布の質感まで察知する触覚の盾。心地よい装備選びの達人。',
+          smell:    '香りで世界を読み解く鑑定士。危険信号も素早くキャッチ。',
+          taste:    '味の物語を読み解く舌。料理は芸術、素材の個性は正直に。',
+          tempPain: '温度や痛みの変化を即察知。環境センサーで仲間を守る。',
+          movement: 'わずかな揺れも見逃さない守護騎士。空と海の旅は慎重派。'
+        },
+        hypo: {
+          hearing:  '雑踏でも落ち着いて動ける耳のタフネス。嵐でも冷静。',
+          vision:   '薄暗い道も慌てない夜の狩人。洞窟探索は任せて。',
+          touch:    '衝撃にも動じない武闘僧。険しい道も踏破する持久力。',
+          smell:    '香りの渦中でも集中を切らさない職人肌。作業に没頭できる。',
+          taste:    '未知の料理に果敢に挑む冒険胃袋。刺激も楽しめる。',
+          tempPain: '気候変化にタフなノマド。暑さ寒さに振り回されにくい。',
+          movement: '回転や加速も面白がる空の戦士。スピードの相棒。'
+        },
+        balanced: 'どんな環境でもマイペース。感覚の調律に長けたバランス職人。'
+      };
+      /* ▲▲ ここまで ▲▲ */
+
       const AXES = [
         { key: 'hearing',  label: '聴覚' },
         { key: 'vision',   label: '視覚' },
@@ -143,26 +168,26 @@
         // ── 視覚 ──
         { id:'v_h_1', axis:'vision', trait:'hyper', adult:'強い照明や画面の光がつらく、遮光したくなる' },
         { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きが負担に感じられる' },
-        { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'部屋が暗くなった変化に気づきにくい' },
+        { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'部屋が暗くなったことに気が付きにくい' },
         { id:'v_y_2', axis:'vision', trait:'hypo',  adult:'画面や印刷の細かい違いに気づきにくい' },
 
         // ── 触覚 ──
         { id:'t_h_1', axis:'touch', trait:'hyper', adult:'チクチクする服やタグが苦手' },
         { id:'t_h_2', axis:'touch', trait:'hyper', adult:'手や服のベタつきが気になる' },
         { id:'t_y_1', axis:'touch', trait:'hypo',  adult:'ぎゅっとした圧があると落ち着く' },
-        { id:'t_y_2', axis:'touch', trait:'hypo',  adult:'軽い擦り傷に気づきにくい' },
+        { id:'t_y_2', axis:'touch', trait:'hypo',  adult:'軽い擦り傷にすぐ気づきにくい' },
 
         // ── 嗅覚 ──
         { id:'s_h_1', axis:'smell', trait:'hyper', adult:'香水や柔軟剤のにおいが強く感じられて離れたくなる' },
         { id:'s_h_2', axis:'smell', trait:'hyper', adult:'料理のにおいが混ざる場所が苦手' },
         { id:'s_y_1', axis:'smell', trait:'hypo',  adult:'香りの強弱の差を感じ取りにくい' },
-        { id:'s_y_2', axis:'smell', trait:'hypo',  adult:'食品の傷みのにおいに気づくのが遅れやすい' },
+        { id:'s_y_2', axis:'smell', trait:'hypo',  adult:'食品の傷みのにおいに気づくのが遅れがち' },
 
         // ── 味覚 ──
         { id:'ta_h_1', axis:'taste', trait:'hyper', adult:'繊細な味の違いがわかり、好みがはっきりしている' },
         { id:'ta_h_2', axis:'taste', trait:'hyper', adult:'食感や香りが合わないと食べづらい' },
         { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'薄味では物足りなく感じる' },
-        { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'味の刺激が弱いと満足しにくい' },
+        { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'新しい味の刺激を強く求める' },
 
         // ── 温度/痛み ──
         { id:'tp_h_1', axis:'tempPain', trait:'hyper', adult:'室温のわずかな変化が気になる' },
@@ -177,79 +202,69 @@
         { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて走ったりジャンプしたくなる' },
       ];
 
-      const COMMENT_BOOK = {
-        hearing: {
-          hyper: { strong:['微かな音の変化に気づける観察力'], challenge:['人混みや大音量の場所で疲れやすい'], tips:['ノイズキャンセリング/耳栓の活用','静かな席や時間帯を選ぶ','通知音量の微調整'] },
-          hypo:  { strong:['賑やかな環境でも集中しやすい'], challenge:['呼びかけやアナウンスを聞き逃しやすい'], tips:['バイブ/光での通知','視覚サインの併用','重要連絡は文字ベースで受け取る'] }
-        },
-        vision: {
-          hyper: { strong:['細かな差異にすぐ気づける洞察力'], challenge:['強い光/ちらつきで疲れやすい'], tips:['遮光/偏光レンズ','画面の明るさ/配色を調整','紙面作業をこまめに挟む'] },
-          hypo:  { strong:['暗所で落ち着いて動ける'], challenge:['細部の変化に気づきにくい'], tips:['コントラスト強調','要点のマーキング','タスク前のチェックリスト'] }
-        },
-        touch: {
-          hyper: { strong:['素材/肌触りへの審美眼'], challenge:['タグ/チクチク/ベタつきがストレス'], tips:['肌当たりの良い素材選び','タグカット/裏返し着用','ウェットティッシュ常備'] },
-          hypo:  { strong:['圧や重みで落ち着きやすい'], challenge:['小さなケガや汚れに気づきにくい'], tips:['定期的なボディチェック','加重ブランケットの活用','触覚入力のバランス'] }
-        },
-        smell: {
-          hyper: { strong:['香りの違いを見分ける能力'], challenge:['香料が混ざる場所が苦手'], tips:['マスク/アロマでリセット','換気の良い席を確保','香り強い洗剤を避ける'] },
-          hypo:  { strong:['強い匂いにも冷静'], challenge:['危険な臭いに気づきにくい'], tips:['期限表示の確認習慣','他者に確認を頼む','におい以外の衛生指標を使う'] }
-        },
-        taste: {
-          hyper: { strong:['味の違いを楽しむ繊細さ'], challenge:['食べられる品目が限られやすい'], tips:['食感/香り単位での置き換え','調味/調理法の微調整','小さな一歩の試食'] },
-          hypo:  { strong:['刺激的な味を楽しむ冒険心'], challenge:['塩分/辛味の過剰に注意'], tips:['栄養バランス表の活用','味以外（温度/見た目）の満足要素を増やす','医療的制限がある場合は専門家相談'] }
-        },
-        tempPain: {
-          hyper: { strong:['体調変化の早期察知'], challenge:['気温/痛みの変化で消耗しやすい'], tips:['重ね着/冷温アイテム','作業時間を短ブロック化','こまめな休憩'] },
-          hypo:  { strong:['幅広い環境に適応できる'], challenge:['熱中症/低体温に気づきにくい'], tips:['タイマーで水分/休憩を促す','活動ログで体調を可視化','危険温度の客観指標を使う'] }
-        },
-        movement: {
-          hyper: { strong:['バランス変化に敏感'], challenge:['乗り物酔い/人混みがつらい'], tips:['混雑回避ルート','安定した姿勢/視点固定','乗り物は前方/風通し良い席'] },
-          hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
-        },
-      };
-
-      /* === シェア用ショート要約 === */
+      /* === 140字向けショート要約（従来） === */
       const SHORT_SUMMARY = {
-        hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい',         hypo:'弱い音に気づきにくい／呼びかけを見落としがち' },
-        vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',             hypo:'暗所の変化に気づきにくい／細かな差を見落としやすい' },
-        touch:    { hyper:'素材感に敏感／チクチクやベタつきが苦手',           hypo:'圧刺激で落ち着く／小さなケガに気づきにくい' },
-        smell:    { hyper:'香りの差に鋭い／混ざったにおいが苦手',             hypo:'弱いにおいに気づきにくい／危険なにおいに気づきにくい' },
-        taste:    { hyper:'味の違いに敏感／食べられる幅が狭くなりがち',       hypo:'薄味は物足りない／弱い刺激では満足しにくい' },
-        tempPain: { hyper:'変化を早く察知／気温や痛みで消耗しやすい',         hypo:'環境にタフ／暑さ寒さに気づくのが遅れがち' },
-        movement: { hyper:'揺れに敏感／人混みや乗り物酔いが出やすい',         hypo:'ゆっくりだと物足りない／刺激を求めがち' },
+        hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい', hypo:'にぎやかでも集中しやすい／呼びかけを見落としがち' },
+        vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',       hypo:'暗所に強い／細かな変化は見落としやすい' },
+        touch:    { hyper:'素材感に敏感／チクチクやベタつきが苦手',       hypo:'圧刺激で落ち着く／小さなケガに気づきにくい' },
+        smell:    { hyper:'香りの差に鋭い／混ざったにおいが苦手',         hypo:'強いにおいも平気／危険なにおいに気づきにくい' },
+        taste:    { hyper:'味の違いに敏感／食べられる幅が狭くなりがち',   hypo:'刺激的な味が得意／塩分や辛味が多くなりがち' },
+        tempPain: { hyper:'変化を早く察知／気温や痛みで消耗しやすい',     hypo:'環境にタフ／暑さ寒さに気づくのが遅れがち' },
+        movement: { hyper:'揺れに敏感／人混みや乗り物酔いが出やすい',     hypo:'スピードに強い／安全確認が遅れがち' },
         balanced: '偏りは少なめ。感じ方は状況次第。'
       };
+
       function getShortSummary(overall, dominant){
         if (overall==='balanced') return SHORT_SUMMARY.balanced;
         return SHORT_SUMMARY[dominant][overall];
       }
+
       function baseURL(){
         return location.origin + location.pathname.replace(/index\.html$/,'');
       }
+
+      // 傾向の見出し（ライト表現）
       function tendencyLabel(overall, dominant){
         if (overall==='balanced') return 'バランス型の傾向かも？';
         const axis = AXES.find(a=>a.key===dominant)?.label || '';
         return `${axis}${overall==='hyper'?'過敏':'鈍麻'}の傾向かも？`;
       }
+
+      // SNSコメント（役職コメントを短く整える：全角50字程度にトリム）
+      function shortRoleComment(overall, dominant){
+        if (overall==='balanced') return ROLE_COMMENTS.balanced;
+        const raw = ROLE_COMMENTS[overall][dominant] || '';
+        const limit = 50;
+        return raw.length <= limit ? raw : (raw.slice(0, limit-1) + '…');
+      }
+
+      /* === 改行入り：140字に収める投稿文（傾向＋役職コメント） === */
       function buildShortShareText({title, level, overall, dominant}){
         const url = baseURL();
         const urlLen = 23; // XのURL換算長
-        const line1 = '【感覚クエスト⚔️診断結果】';
+        const line1 = '感覚クエスト⚔️診断結果';
         const line2 = `称号「${title}」 Lv${String(level).padStart(2,'0')}`;
-        const line3 = tendencyLabel(overall, dominant) + (overall==='balanced' ? '' : ' ' + getShortSummary(overall, dominant).split('／')[0]);
-        const line4 = 'やってみる▶ ' + url;
+        const line3 = tendencyLabel(overall, dominant);
+        const line4 = shortRoleComment(overall, dominant);
+        const line5 = 'やってみる▶ ' + url;
         const tag  = ' #KANKAKUクエスト';
         const nl = '\n';
-        let text = [line1, line2, line3, line4].join(nl) + tag;
+        let text = [line1, line2, line3, line4, line5].join(nl) + tag;
 
-        // 140字調整（URLは固定長23）
+        // 140字調整（URLは固定長23で計算）
         const limit = 140;
         const effLen = t => t.length - (url.length - urlLen);
         if (effLen(text) <= limit) return text;
-        text = [line1, line2, line3, line4].join(nl);
+        // まずタグ省略
+        text = [line1, line2, line3, line4, line5].join(nl);
         if (effLen(text) <= limit) return text;
-        const tiny3 = tendencyLabel(overall, dominant);
-        return [line1, line2, tiny3, line4].join(nl);
+        // line4をさらに短縮（前半だけ）
+        const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
+        text = [line1, line2, line3, mini4, line5].join(nl);
+        if (effLen(text) <= limit) return text;
+        // 最後はline3のみ残す
+        text = [line1, line2, line3, line5].join(nl);
+        return text;
       }
 
       /* === 非線形ウェイト（1・2は軽め） === */
@@ -340,23 +355,20 @@
         const s = calcScores(qs, answers);
         const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced } = s;
 
-        let titleObj, axisLabel, roleImg, level, lvLabel = 'Lv';
+        let titleObj = null, axisLabel = null, roleImg = null, level = null, lvLabel = 'Lv';
         if (overall === 'balanced') {
           titleObj = { t:'バランス型：ノーマライザー', role:'ノーマライザー' };
           axisLabel = 'バランス型';
           roleImg = IMAGES.balanced;
-          level = lvBalanced;             // 0–99
+          level = lvBalanced;
           lvLabel = 'Lv（バランス度）';
         } else {
           const axis = AXES.find(a=>a.key===dominant);
           axisLabel = axis ? axis.label : '';
           titleObj = TITLES[overall][dominant];
           roleImg = overall==='hyper' ? IMAGES.rolesHyper[dominant] : IMAGES.rolesHypo[dominant];
-          level = lvDominant;             // 0–99
+          level = lvDominant;
         }
-
-        // 先にサブ片を作って差し込む（入れ子のテンプレは使わない）
-        const roleImgHTML = roleImg ? '<img class="role" src="'+roleImg+'" alt="'+titleObj.t+'">' : '';
 
         let headNote = '';
         if (overall === 'balanced' && maxAny <= 25) {
@@ -367,14 +379,21 @@
           headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
         }
 
+        // 役職コメント（結果ページ表示用）
+        const roleComment =
+          overall==='balanced'
+            ? ROLE_COMMENTS.balanced
+            : ROLE_COMMENTS[overall][dominant];
+
         app.innerHTML = `
           <div class="grid">
             <div class="card center">
               <h2>結果</h2>
               <div class="muted">${headNote}</div>
-              ${roleImgHTML}
+              ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
               <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
+              <div class="role-comment">${roleComment}</div>
               <div style="height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;">
                 <canvas id="radar"></canvas>
               </div>
@@ -460,29 +479,31 @@
       function renderAxisLevelBadges(radar){
         return radar.map(d=>{
           const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-          const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
-          return (
-            '<div class="level-item">' +
-              '<div><strong>' + d.axis + '</strong><span class="chip">' + mode + '</span></div>' +
-              '<div class="lv">Lv' + String(lv).padStart(2,'0') + '</div>' +
-            '</div>'
-          );
+        const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
+          return `
+            <div class="level-item">
+              <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
+              <div class="lv">Lv${String(lv).padStart(2,'0')}</div>
+            </div>
+          `;
         }).join('');
       }
 
       /* ================ ロジック ================ */
       function pickQuestions(count){
+        // 軸ごとに過敏2・鈍麻2を集める（固定で28問）
         const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
         BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
-
         const picked = [];
         AXES.forEach(ax=>{
           const H = byAxis[ax.key].hyper.slice(0,2);
           const Y = byAxis[ax.key].hypo.slice(0,2);
           picked.push(...H, ...Y);
         });
-        return shuffle(picked).slice(0, count);
+        return picked; // ちょうど28問
       }
+
+      // シャッフル（現在は順番固定でOKなら未使用）
       function shuffle(arr){
         const a = arr.slice();
         for(let i=a.length-1;i>0;i--){
@@ -491,6 +512,7 @@
         }
         return a;
       }
+
       // p=0–100 → Lv=0–99（少し緩やか）
       const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
 
@@ -517,8 +539,8 @@
         const hypoAvg  = Math.round(radar.reduce((a,d)=>a+d.hypo,0)/radar.length);
         const maxAny   = Math.max(...radar.map(d=>Math.max(d.hyper,d.hypo)));
 
-        const EPS = 6;   // 平均差しきい値
-        const LOW = 25;  // 低強度しきい値
+        const EPS = 6;   // 平均差のしきい値（%）
+        const LOW = 25;  // 低強度のしきい値
         let overall;
         if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
           overall = 'balanced';
@@ -543,40 +565,68 @@
         const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
                             .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
         const list = (picks.length? picks: scored.sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo)).slice(0,3));
-
         return list.map(s=>{
           const mode = s.hyper> s.hypo ? 'hyper' : (s.hypo> s.hyper? 'hypo':'mix');
           const book = COMMENT_BOOK[s.key];
-          const strong = mode==='mix'? book.hyper.strong.concat(book.hypo.strong).slice(0,2) : book[mode].strong;
-          const challenge = mode==='mix'? book.hyper.challenge.concat(book.hypo.challenge).slice(0,2) : book[mode].challenge;
-          const tips = mode==='mix'? book.hyper.tips.concat(book.hypo.tips).slice(0,3) : book[mode].tips;
-
-          return (
-            '<div class="card">' +
-              '<h3>' + s.label + '</h3>' +
-              '<div class="small muted">過敏:' + s.hyper + '% / 鈍麻:' + s.hypo + '%</div>' +
-              '<div class="cols" style="margin-top:8px">' +
-                '<div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>' + strong.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
-                '<div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>' + challenge.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
-                '<div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>' + tips.map(x=>'<li>'+x+'</li>').join('') + '</ul></div>' +
-              '</div>' +
-            '</div>'
-          );
+          const strong = mode==='mix'? [...book.hyper.strong,...book.hypo.strong].slice(0,2) : book[mode].strong;
+          const challenge = mode==='mix'? [...book.hyper.challenge,...book.hypo.challenge].slice(0,2) : book[mode].challenge;
+          const tips = mode==='mix'? [...book.hyper.tips,...book.hypo.tips].slice(0,3) : book[mode].tips;
+          return `
+            <div class="card">
+              <h3>${s.label}</h3>
+              <div class="small muted">過敏:${s.hyper}% / 鈍麻:${s.hypo}%</div>
+              <div class="cols" style="margin-top:8px">
+                <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>${strong.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>${challenge.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+              </div>
+            </div>`;
         }).join('');
       }
 
+      const COMMENT_BOOK = {
+        hearing: {
+          hyper: { strong:['微かな音の変化に気づける観察力'], challenge:['人混みや大音量の場所で疲れやすい'], tips:['ノイズキャンセリング/耳栓の活用','静かな席や時間帯を選ぶ','通知音量の微調整'] },
+          hypo:  { strong:['賑やかな環境でも集中しやすい'], challenge:['呼びかけやアナウンスを聞き逃しやすい'], tips:['バイブ/光での通知','視覚サインの併用','重要連絡は文字ベースで受け取る'] }
+        },
+        vision: {
+          hyper: { strong:['細かな差異にすぐ気づける洞察力'], challenge:['強い光/ちらつきで疲れやすい'], tips:['遮光/偏光レンズ','画面の明るさ/配色を調整','紙面作業をこまめに挟む'] },
+          hypo:  { strong:['暗所で落ち着いて動ける'], challenge:['細部の変化に気づきにくい'], tips:['コントラスト強調','要点のマーキング','タスク前のチェックリスト'] }
+        },
+        touch: {
+          hyper: { strong:['素材/肌触りへの審美眼'], challenge:['タグ/チクチク/ベタつきがストレス'], tips:['肌当たりの良い素材選び','タグカット/裏返し着用','ウェットティッシュ常備'] },
+          hypo:  { strong:['圧や重みで落ち着きやすい'], challenge:['小さなケガや汚れに気づきにくい'], tips:['定期的なボディチェック','加重ブランケットの活用','触覚入力のバランス'] }
+        },
+        smell: {
+          hyper: { strong:['香りの違いを見分ける能力'], challenge:['香料が混ざる場所が苦手'], tips:['マスク/アロマでリセット','換気の良い席を確保','香り強い洗剤を避ける'] },
+          hypo:  { strong:['強い匂いにも冷静'], challenge:['危険な臭いに気づきにくい'], tips:['期限表示の確認習慣','他者に確認を頼む','におい以外の衛生指標を使う'] }
+        },
+        taste: {
+          hyper: { strong:['味の違いを楽しむ繊細さ'], challenge:['食べられる品目が限られやすい'], tips:['食感/香り単位での置き換え','調味/調理法の微調整','小さな一歩の試食'] },
+          hypo:  { strong:['刺激的な味を楽しむ冒険心'], challenge:['塩分/辛味の過剰に注意'], tips:['栄養バランス表の活用','味以外（温度/見た目）の満足要素を増やす','医療的制限がある場合は専門家相談'] }
+        },
+        tempPain: {
+          hyper: { strong:['体調変化の早期察知'], challenge:['気温/痛みの変化で消耗しやすい'], tips:['重ね着/冷温アイテム','作業時間を短ブロック化','こまめな休憩'] },
+          hypo:  { strong:['幅広い環境に適応できる'], challenge:['熱中症/低体温に気づきにくい'], tips:['タイマーで水分/休憩を促す','活動ログで体調を可視化','危険温度の客観指標を使う'] }
+        },
+        movement: {
+          hyper: { strong:['バランス変化に敏感'], challenge:['乗り物酔い/人混みがつらい'], tips:['混雑回避ルート','安定した姿勢/視点固定','乗り物は前方/風通し良い席'] },
+          hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
+        },
+      };
+
       function renderLowOverallCard(){
-        return (
-          '<div class="card">' +
-            '<h3>今回のまとめ</h3>' +
-            '<p class="muted">全体的に大きな偏りは見られませんでした。日によって「少し気になる」「今日は平気」など、ゆるやかな変化があるタイプかもしれません。</p>' +
-            '<ul>' +
-              '<li>困りごとが少ない時は、そのままの環境でOK</li>' +
-              '<li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>' +
-              '<li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>' +
-            '</ul>' +
-          '</div>'
-        );
+        return `
+          <div class="card">
+            <h3>今回のまとめ</h3>
+            <p class="muted">全体的に大きな偏りは見られませんでした。日によって「少し気になる」「今日は平気」など、ゆるやかな変化があるタイプかもしれません。</p>
+            <ul>
+              <li>困りごとが少ない時は、そのままの環境でOK</li>
+              <li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>
+              <li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>
+            </ul>
+          </div>
+        `;
       }
 
       /* ================ 初期化（ロゴでトップ） ================ */
