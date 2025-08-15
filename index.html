@@ -56,6 +56,7 @@
       .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
       .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; transition:filter .15s ease}
       .likert button.active{outline:2px solid #facc15; border-color:#facc15}
+
       /* 回答ボタンの色分け（v0〜v4） */
       .likert .v0{ background:#e6f7ec; }
       .likert .v0:hover{ filter:brightness(.98); }
@@ -67,7 +68,17 @@
       .likert .v3:hover{ filter:brightness(.97); }
       .likert .v4{ background:#facc15; }
       .likert .v4:hover{ filter:brightness(.97); }
+      /* リトライボタンの色 */
+      .retry-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+}
 
+.retry-button:hover {
+  background-color: #c62828;
+}
+      
       .cols{display:grid; gap:16px}
       @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
       .small{font-size:12px; color:#475569}
@@ -516,7 +527,7 @@
               <div style="margin-top:10px; text-align:center">
                 <button id="savePngBtn" class="button">結果を画像保存（PNG）</button>
               </div>
-              <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
+              <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button retry-button">もう一度調べる</button></div>
             </div>
 
             <div class="card cta">
