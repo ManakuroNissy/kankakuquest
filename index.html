@@ -452,13 +452,13 @@
         const s = calcScores(qs, answers);
         const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual } = s;
 
-        let titleObj = null, axisLabel = null, roleImg = null, level = null, lvLabel = 'Lv';
+        let titleObj = null, axisLabel = null, roleImg = null, level = null, levelLabel = 'レベル';
         if (overall === 'balanced') {
           titleObj = { t:'バランス型：ノーマライザー', role:'ノーマライザー' };
           axisLabel = 'バランス型';
           roleImg = IMAGES.balanced;
           level = lvBalanced;
-          lvLabel = 'Lv（バランス度）';
+          levelLabel = 'レベル（バランス度）';
         } else if (overall === 'dual') {
           titleObj = TITLES.dual.any;
           axisLabel = '両極端';
@@ -497,7 +497,7 @@
               <div class="muted">${headNote}</div>
               ${roleImg ? `<img class="role" src="${roleImg}" alt="${titleObj.t}">` : ``}
               <div style="font-weight:700; margin-top:6px">称号：${titleObj.t}</div>
-              <div class="level-display">${lvLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
+              <div class="level-display">${levelLabel}：<span>Lv${String(level).padStart(2,'0')}</span>　ジョブ：${titleObj.role}</div>
               <div class="role-comment">${roleComment}</div>
               <div class="radar-wrap"><canvas id="radar"></canvas></div>
               <div class="disclaimer">
