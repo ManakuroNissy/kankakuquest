@@ -294,35 +294,7 @@
         text = lines3.join(nl);
         if (effLen(text) <= limit) return text;
         // 最後はコメント行を削除
-        const lines4 = lines3.filter((l,i)=>i!==3);
-        text = lines4.join(nl);
-        return text;
-      }」 Lv${String(level).padStart(2,'0')}`,
-          tendencyLabel(overall, dominant),
-          shortRoleComment(overall, dominant),
-          '',
-          'やってみる▶ ' + url,
-          '',
-          '#KANKAKUクエスト'
-        ];
-        let text = lines.join(nl);
-
-        // 140字に収める（URL23文字扱い）
-        const effLen = t => t.length - (url.length - urlLen);
-        const limit = 140;
-        if (effLen(text) <= limit) return text;
-        // まずコメントを短い一文に
-        const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
-        const lines2 = [...lines];
-        lines2[4] = mini4;
-        text = lines2.join(nl);
-        if (effLen(text) <= limit) return text;
-        // 次に空行を一つ削る
-        const lines3 = lines2.filter((l,i)=>!(i===1));
-        text = lines3.join(nl);
-        if (effLen(text) <= limit) return text;
-        // 最後はコメント行を削除
-        const lines4 = lines3.filter((l,i)=>i!==3); // コメント行が詰まっている前提で調整
+        const lines4 = lines3.filter((l,i)=> i!==3);
         text = lines4.join(nl);
         return text;
       }
