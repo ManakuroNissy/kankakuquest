@@ -570,28 +570,37 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    function getAxisLabel(key){
-  for (let i=0;i<AXES.length;i++){
+function getAxisLabel(key){
+  for (var i=0; i<AXES.length; i++){
     if (AXES[i].key === key) return AXES[i].label;
   }
   return '';
 }
     
     /* ===== シェア文（イベント訴求つき短文） ===== */
-function buildShareText({title, level, finalType, overallType, dominant}){
-  const hash = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
-  const head = '【診断結果】';
-  const lv = 'Lv' + String(level).padStart(2,'0');
+function buildShareText(arg){
+  var title = arg.title;
+  var level = arg.level;
+  var finalType = arg.finalType;
+  var overallType = arg.overallType;
+  var dominant = arg.dominant;
+
+  var hash = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
+  var head = '【診断結果】';
+  var lv   = 'Lv' + String(level).padStart(2,'0');
 
   var axisLabel = getAxisLabel(dominant);
-  var tendency;
+  var tendency = '';
   if (finalType === 'dual') {
     tendency = '過敏と鈍麻の“両極端”タイプ！';
   } else if (finalType === 'balanced') {
     tendency = '今回は偏り少なめのバランス型！';
   } else {
-    tendency = (axisLabel || '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
+    tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
   }
+
+  return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + hash;
+}
 
   return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + hash;
 }
@@ -641,8 +650,8 @@ function buildShareText({title, level, finalType, overallType, dominant}){
       questions.forEach(q=>{
         const v = answers[q.id];
         if(v==null) return;
-        var w = (v != null && Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, v))
-  ? LIKERT_WEIGHT[v]
+        var w = (v != null && Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, String(v))) ? LIKERT_WEIGHT[String(v)] : 0;
+
   : 0;
         if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
         else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
