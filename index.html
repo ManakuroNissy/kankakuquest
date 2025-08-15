@@ -441,6 +441,18 @@ const FUN_LINES = {
 
           ${ finalType==='balanced' && s.maxAny<25 ? renderLowOverallCard() : renderAxisFeedback(s.radar) }
 
+<!-- 全職業のレベル（折りたたみ） -->
+<div class="card" id="allJobsCard">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <h3 style="margin:0">全職業のレベル</h3>
+    <button class="button" id="toggleJobs">一覧を表示</button>
+  </div>
+  <div id="jobsPanel" hidden style="margin-top:10px">
+    <div id="jobsTopNote" class="small muted" style="margin-bottom:6px"></div>
+    <div id="jobsList" class="level-grid"></div>
+  </div>
+</div>
+
           <div class="card share">
             <div style="font-weight:700;">結果をシェアしてイベントを応援しよう！</div>
             <div class="buttons" style="margin-top:6px">
@@ -556,6 +568,44 @@ document.getElementById('shareX').onclick = ()=>{
       // スティッキー告知バー
       showSticky(seminarUrl);
 
+// --- 全職業レベル 初期化 ---
+const jobs = buildJobLevels(s.radar);
+const jobsBtn = document.getElementById('toggleJobs');
+const jobsPanel = document.getElementById('jobsPanel');
+const jobsList = document.getElementById('jobsList');
+const jobsTopNote = document.getElementById('jobsTopNote');
+
+// 上位5件の要約文
+if (jobsTopNote){
+  const top5 = jobs.slice(0,5).map(j=> `${j.role} (Lv${String(j.level).padStart(2,'0')})`);
+  jobsTopNote.textContent = '上位: ' + top5.join(' / ');
+}
+
+// 一覧（全件）
+if (jobsList){
+  jobsList.innerHTML = jobs.map(j=>{
+    const chip = (j.mode==='hyper' ? '過敏' : '鈍麻');
+    return `
+      <div class="level-item">
+        <div><strong>${j.title}</strong>
+          <span class="chip">${j.axis}・${chip}</span>
+        </div>
+        <div class="lv">Lv${String(j.level).padStart(2,'0')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 折りたたみ
+if (jobsBtn && jobsPanel){
+  jobsBtn.onclick = ()=>{
+    const on = jobsPanel.hidden;
+    jobsPanel.hidden = !on;
+    jobsBtn.textContent = on ? '一覧を非表示' : '一覧を表示';
+  };
+}
+
+      
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
@@ -704,6 +754,41 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
                lvDominant, lvBalanced, lvDual, dualAxes };
     }
 
+// 各軸の「過敏/鈍麻」を職業レベルに展開（一覧用）
+function buildJobLevels(radar){
+  // radar: [{axis:'聴覚', axisKey:'hearing', hyper:数値, hypo:数値}, ...]
+  const rows = [];
+  radar.forEach(d=>{
+    // hyper（過敏）側
+    if (TITLES.hyper[d.axisKey]) {
+      rows.push({
+        axisKey: d.axisKey,
+        axis: d.axis,
+        mode: 'hyper',
+        title: TITLES.hyper[d.axisKey].t,
+        role:  TITLES.hyper[d.axisKey].role,
+        level: pctToLv(d.hyper),
+        raw:   d.hyper
+      });
+    }
+    // hypo（鈍麻）側
+    if (TITLES.hypo[d.axisKey]) {
+      rows.push({
+        axisKey: d.axisKey,
+        axis: d.axis,
+        mode: 'hypo',
+        title: TITLES.hypo[d.axisKey].t,
+        role:  TITLES.hypo[d.axisKey].role,
+        level: pctToLv(d.hypo),
+        raw:   d.hypo
+      });
+    }
+  });
+  // レベル降順（同点は raw% で比較）
+  return rows.sort((a,b)=> (b.level - a.level) || (b.raw - a.raw));
+}
+
+    
     function renderAxisFeedback(radar){
       const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
       const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
