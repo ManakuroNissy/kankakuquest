@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
     <title>KANKAKUクエスト — あなたの感覚ジョブ診断</title>
     <!-- Chart.js（レーダーチャート用） -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -12,6 +12,7 @@
         --ring:#e5e7eb; --good:#16a34a; --warn:#ea580c;
       }
       *{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:linear-gradient(#f7f8fb,#fff)}
       .container{max-width:960px; margin:0 auto; padding:16px}
       header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
@@ -78,7 +79,7 @@
         .role-comment{font-size:14px; line-height:1.6}
         .level-grid{grid-template-columns:1fr}
         .share .buttons .button{width:100%}
-        .radar-wrap{height:260px; max-width:100%;}
+        .radar-wrap{height:320px; max-width:100%;}
       }
     #homeLink{pointer-events:none; cursor:default}
     </style>
@@ -334,7 +335,7 @@
           <div class="grid">
             <div class="card hero"><img src="${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
             <div class="card" style="text-align:center">
-              <h1>あなたの感覚<br>ジョブ診断</h1>
+              <h1>あなたの感覚ジョブ診断</h1>
               <p class="muted">
                 簡単な質問に答えるだけで、聴覚・視覚・触覚・嗅覚・味覚・温度/痛み・<strong>動き</strong>の感じ方を見える化。<br>
                 最後にレーダーチャートとRPG風の称号が表示されます。
@@ -345,7 +346,7 @@
             </div>
           </div>`;
         document.getElementById('startBtn').onclick=()=>{ startQuestions(); };
-        window.scrollTo({top:0, behavior:'smooth'});
+        window.scrollTo(0,0);
       }
 
       function startQuestions(){
@@ -511,7 +512,7 @@
               { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
             ]
           },
-          options: { maintainAspectRatio:false, scales:{ r:{ suggestedMin:0, suggestedMax:100, pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 10 : 12) } }, ticks:{ display:false } } }, plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 10 : 12) } } } } }
+          options: { maintainAspectRatio:false, scales:{ r:{ suggestedMin:0, suggestedMax:100, pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }, ticks:{ display:false } } }, plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } } }
         });
 
         // シェア（改行入り・空行あり）
