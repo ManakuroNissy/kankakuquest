@@ -602,9 +602,6 @@ function buildShareText(arg){
   return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + hash;
 }
 
-  return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + hash;
-}
-
     /* ===== レベルバッジ ===== */
     function renderAxisLevelBadges(radar){
       return radar.map(d=>{
@@ -652,7 +649,6 @@ function buildShareText(arg){
         if(v==null) return;
         var w = (v != null && Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, String(v))) ? LIKERT_WEIGHT[String(v)] : 0;
 
-  : 0;
         if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
         else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
       });
