@@ -12,8 +12,13 @@
         --ring:#e5e7eb; --good:#16a34a; --warn:#ea580c;
       }
       *{box-sizing:border-box}
-      html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-      body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:linear-gradient(#f7f8fb,#fff)}
+      html{-webkit-text-size-adjust:100%;text-size-adjust:100%;max-width:100%;overflow-x:hidden;}
+      body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:linear-gradient(#f7f8fb,#fff);max-width:100%;overflow-x:hidden;}
+
+      /* === モバイル横はみ出し対策（共通） === */
+      img,svg,canvas,video{max-width:100%;height:auto;display:block}
+      .seminar-banner{width:100%;height:auto;display:block}
+
       .container{max-width:960px; margin:0 auto; padding:16px}
       header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
       header .bar{display:flex; align-items:center; justify-content:space-between; padding:10px 16px}
@@ -52,7 +57,7 @@
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
       .center{text-align:center}
-      img.role{width:360px; height:auto; display:block; margin:8px auto 0} /* 1.5倍 */
+      img.role{width:360px; height:auto; display:block; margin:8px auto 0; max-width:100%;}
       .level-display{font-size:20px; font-weight:700; margin-top:6px}
       .role-comment{margin-top:6px; color:#374151}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
@@ -66,8 +71,8 @@
       .level-item .lv{font-weight:700}
       .chip{display:inline-block; padding:2px 8px; font-size:12px; border-radius:999px; background:#f1f5f9; margin-left:6px}
       .disclaimer{margin-top:10px; font-size:12px; color:#64748b; line-height:1.6}
-    #homeLink{pointer-events:none; cursor:default}
-    .radar-wrap{height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px;}
+      #homeLink{pointer-events:none; cursor:default}
+      .radar-wrap{height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px; width:100%;}
       @media(max-width:480px){
         .container{padding:12px}
         header .bar{padding:8px 12px}
@@ -81,13 +86,12 @@
         .share .buttons .button{width:100%}
         .radar-wrap{height:300px; max-width:100%;}
       }
-    #homeLink{pointer-events:none; cursor:default}
     </style>
   </head>
   <body>
     <header>
       <div class="bar container">
-        <a id="homeLink" class="brand">
+        <a id="homeLink" class="brand" aria-label="KANKAKUクエスト">
           <div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div>
         </a>
         <a id="seminarBtnTop" class="button primary" target="_blank" href="#">8/23 セミナーを見る</a>
@@ -333,7 +337,7 @@
       function renderStart(){
         app.innerHTML = `
           <div class="grid">
-            <div class="card hero"><img src="${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
+            <div class="card hero"><img src="\${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
             <div class="card" style="text-align:center">
               <h1>あなたの感覚ジョブ診断</h1>
               <p class="muted">
@@ -362,29 +366,52 @@
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
           <div class="grid">
-            <div class="progress"><div style="width:${progress}%"></div></div>
+            <div class="progress"><div style="width:\${progress}%"></div></div>
             <div class="card" style="text-align:center">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
-                <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
-                <div class="small">${index+1} / ${total}</div>
+                <div><span class="badge">\${AXES.find(a=>a.key===q.axis).label}</span></div>
+                <div class="small">\${index+1} / \${total}</div>
               </div>
-              <div style="font-size:18px; margin-bottom:20px">${q.adult}</div>
-              <div class="likert" id="likert"></div>
+              <div style="font-size:18px; margin-bottom:20px">\${q.adult}</div>
+              <div class="likert" id="likert" role="radiogroup"></div>
               <div style="display:flex; justify-content:space-between; margin-top:14px">
-                <button class="button" id="prevBtn" ${index===0?'disabled':''}>もどる</button>
+                <button class="button" id="prevBtn" \${index===0?'disabled':''}>もどる</button>
                 <span></span>
               </div>
             </div>
           </div>`;
         const wrap = document.getElementById('likert');
-        LIKERT.forEach(o=>{
+
+        // アクセシビリティ対応：キーボードで選択
+        LIKERT.forEach((o, idx)=>{
           const btn = document.createElement('button');
+          btn.type = 'button';
           btn.textContent = o.label;
           btn.className='button v'+o.v; // 色クラス付与
-          if(answered===o.v) btn.classList.add('active');
+          btn.setAttribute('role','radio');
+          const isOn = answered===o.v;
+          if(isOn) btn.classList.add('active');
+          btn.setAttribute('aria-checked', isOn ? 'true' : 'false');
+          btn.tabIndex = isOn || (answered==null && idx===0) ? 0 : -1;
+
           btn.onclick=()=> selectAndNext(o.v);
+          btn.onkeydown = (e)=>{
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown'){
+              e.preventDefault();
+              const next = btn.nextElementSibling || wrap.firstElementChild;
+              next.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
+              e.preventDefault();
+              const prev = btn.previousElementSibling || wrap.lastElementChild;
+              prev.focus();
+            } else if (e.key === ' ' || e.key === 'Enter'){
+              e.preventDefault();
+              selectAndNext(o.v);
+            }
+          };
           wrap.appendChild(btn);
         });
+
         document.getElementById('prevBtn').onclick=()=>{ if(index>0){ index--; renderQuestion(); } };
         window.scrollTo({top:0, behavior:'smooth'});
       }
@@ -501,25 +528,34 @@
             </div>
           </div>`;
 
-        // レーダーチャート
+        // レーダーチャート（CDN失敗時フォールバック込み）
         const ctx = document.getElementById('radar');
-        new Chart(ctx, {
-          type: 'radar',
-          data: {
-            labels: radar.map(d=>d.axis),
-            datasets: [
-              { label:'過敏', data: radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
-              { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
-            ]
-          },
-          options: { maintainAspectRatio:false, scales:{ r:{ suggestedMin:0, suggestedMax:100, pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }, ticks:{ display:false } } }, plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } } }
-        });
+        if (window.Chart && ctx) {
+          new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: radar.map(d=>d.axis),
+              datasets: [
+                { label:'過敏', data: radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
+                { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
+              ]
+            },
+            options: { responsive:true, maintainAspectRatio:false, scales:{ r:{ suggestedMin:0, suggestedMax:100, pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }, ticks:{ display:false } } }, plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } } }
+          });
+        } else if (ctx) {
+          const fallback = document.createElement('div');
+          fallback.className = 'small muted';
+          fallback.style.textAlign = 'center';
+          fallback.style.marginTop = '8px';
+          fallback.textContent = '（チャートを表示できませんでした）';
+          ctx.parentNode.replaceWith(fallback);
+        }
 
         // シェア（改行入り・空行あり）
         const shortText = buildShortShareText({ title: titleObj.t, level, overall, dominant });
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
-          window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank');
+          window.open(`https://x.com/intent/tweet?text=${t}`,'_blank');
         };
         document.getElementById('shareFBlink').onclick = () => {
           const u = encodeURIComponent(baseURL());
@@ -551,8 +587,8 @@
         BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
         const picked = [];
         AXES.forEach(ax=>{
-          const H = byAxis[ax.key].hyper.slice(0,2);
-          const Y = byAxis[ax.key].hypo.slice(0,2);
+          const H = shuffle(byAxis[ax.key].hyper).slice(0,2);
+          const Y = shuffle(byAxis[ax.key].hypo ).slice(0,2);
           picked.push(...H, ...Y);
         });
         return shuffle(picked); // ランダム順で出題
@@ -707,11 +743,45 @@
         `;
       }
 
-      /* ================ 初期化（ロゴでトップ） ================ */
+      /* ================ 便利関数（ボタン文言など） ================ */
+      function formatJPDate(iso){
+        const d = new Date(iso + 'T00:00:00');
+        const w = ['日','月','火','水','木','金','土'][d.getDay()];
+        return `${d.getMonth()+1}/${d.getDate()}(${w})`;
+      }
+      function updateSeminarButton(){
+        const btn = document.getElementById('seminarBtnTop');
+        if(!btn) return;
+        const today = new Date();
+        const eventDate = new Date(SEMINAR_DATE + 'T23:59:59');
+        if (today <= eventDate) {
+          btn.textContent = `${formatJPDate(SEMINAR_DATE)} セミナーを見る`;
+          btn.href = SEMINAR_URL;
+        } else {
+          btn.textContent = 'アーカイブを見る';
+          btn.href = SEMINAR_URL; // 適宜変更
+        }
+      }
+      function preload(srcs=[]){
+        srcs.forEach(s => { const i = new Image(); i.src = s; });
+      }
+
+      /* ================ 初期化（ロゴはタップ無効のまま） ================ */
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
-        
+
+        // セミナーボタン文言の自動切替
+        updateSeminarButton();
+
+        // 画像を先読みして結果画面のシフトを抑える
+        const roleImgs = [
+          IMAGES.balanced, IMAGES.dual, IMAGES.title,
+          ...Object.values(IMAGES.rolesHyper),
+          ...Object.values(IMAGES.rolesHypo)
+        ].filter(Boolean);
+        preload(roleImgs);
+
         renderStart();
       });
     </script>
