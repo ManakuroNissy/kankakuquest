@@ -638,7 +638,7 @@
         return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual };
       }
 
-      function renderAxisFeedback(radar){(radar){
+      function renderAxisFeedback(radar){
         const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
         const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
                             .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
