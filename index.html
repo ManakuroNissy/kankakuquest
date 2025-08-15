@@ -786,7 +786,58 @@ function drawWrap(ctx, text, x, y, maxWidth, lineHeight){
   for(const ln of lines){ ctx.fillText(ln, x, y); y += lineHeight; }
   return y;
 }
+    
+function getCatchCopy(title){
+  const map = {
+    'エルフ耳の斥候（スカウト）': '微かな変化も見逃さない、静寂の守護者！',
+    '洞察の魔法使い（メイジ）': '光と影を読み解く、千里眼の術師！',
+    '結界の守護者（ガーディアン）': '触覚の盾で仲間を守る、堅牢の守護者！',
+    '毒の鑑定士（アルケミスト）': '香りで真実を見抜く、鼻利きの賢者！',
+    '美食の王子／姫（グルメ）': '一口で世界がひらく、味覚の探究者！',
+    '気候予報士（メイジ）': '温度と痛みのサインを読む、環境の賢者！',
+    '揺れセンサー搭載者（ナイト）': 'わずかな揺れも察知する、均衡の騎士！',
 
+    '戦場の鼓手（バード）': 'リズムで仲間を導く、戦場の指揮官！',
+    '月影のハンター（ハンター）': '薄闇を味方にする、静謐の狩人！',
+    '鉄皮のモンク（モンク）': '衝撃を受け止める、泰然の拳！',
+    '炉心の鍛冶師（ブラックスミス）': '匂いの渦でもぶれない、集中の職人！',
+    '香辛の冒険家（エクスプローラー）': '刺激を楽しむ、味覚の冒険者！',
+    '四季渡りのノマド（ノマド）': '気候にしなやかに馴染む、タフネス旅人！',
+    '竜騎のランサー（ドラグーン）': 'スピードと回転を制す、空駆ける槍！',
+
+    '感覚の双剣士（デュアルブレード）': '反応を切り替える、二刀流の戦術家！',
+    'バランス型：ノーマライザー': 'どんな環境でも整える、調律の名手！'
+  };
+  // 該当なし時のやさしい汎用文
+  return map[title] || '自分の感覚を味方につける、冒険の始まり！';
+}
+
+function drawRoundedRect(ctx, x, y, w, h, r, fillStyle) {
+  const rr = Math.min(r, h/2, w/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x,   y+h, rr);
+  ctx.arcTo(x,   y+h, x,   y,   rr);
+  ctx.arcTo(x,   y,   x+w, y,   rr);
+  ctx.closePath();
+  const prev = ctx.fillStyle;
+  ctx.fillStyle = fillStyle;
+  ctx.fill();
+  ctx.fillStyle = prev;
+}
+
+function fitTextSize(ctx, text, maxWidth, base=32, min=18, step=2, fontFamily='system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial'){
+  for(let size=base; size>=min; size-=step){
+    ctx.font = `700 ${size}px ${fontFamily}`;
+    if (ctx.measureText(text).width <= maxWidth) return size;
+  }
+  // どうしても入らない場合は最小サイズで
+  ctx.font = `700 ${min}px ${fontFamily}`;
+  return min;
+}
+
+    
 // ===== ここを差し替え =====
 async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
   try{
@@ -859,6 +910,31 @@ async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar'
     g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
     y = drawWrap(g, `レベル：Lv${String(level).padStart(2,'0')}`, P, y, COL, 44);
     y += GAP;
+
+    // === ここから追加：キャッチコピー（中央寄せの角丸バッジ） ===
+const catchCopy = getCatchCopy(title);
+const PADX = 16, PADY = 10;
+const MAX_W = Math.min(760, (W - P*2));     // 左右マージンを確保
+// 可変フォントサイズで幅に収める
+const size = fitTextSize(g, catchCopy, MAX_W - PADX*2, 32, 18);
+const textW = g.measureText(catchCopy).width;
+const pillW = Math.min(textW + PADX*2, MAX_W);
+const pillH = Math.round(size + PADY*2);
+const pillX = Math.round((W - pillW)/2);
+const pillY = y;
+
+drawRoundedRect(g, pillX, pillY, pillW, pillH, 12, 'rgba(15,23,42,0.85)'); // ほぼ黒・半透明
+const prevAlign = g.textAlign, prevBase = g.textBaseline, prevFill = g.fillStyle;
+g.fillStyle = '#ffffff';
+g.textAlign = 'center';
+g.textBaseline = 'middle';
+g.fillText(catchCopy, pillX + pillW/2, pillY + pillH/2);
+g.textAlign = prevAlign; 
+g.textBaseline = prevBase; 
+g.fillStyle = prevFill;
+
+y += pillH + 24; // 次の要素との間隔
+// === 追加ここまで ===
 
 // 役職イラスト（中央寄せ）
 g.drawImage(roleImg, P + (COL - roleW) / 2, y, roleW, roleH);
