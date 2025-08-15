@@ -2,10 +2,27 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>KANKAKUクエスト — あなたの感覚ジョブ診断</title>
+
+    <!-- ===== 静的OGP ===== -->
+    <meta property="og:title" content="KANKAKUクエスト — あなたの感覚ジョブ診断">
+    <meta property="og:description" content="7つの感覚（聴覚/視覚/触覚/嗅覚/味覚/温度・痛み/動き）を簡易チェック。称号とレーダーチャートを表示。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://manakuronissy.github.io/">
+    <meta property="og:image" content="https://manakuronissy.github.io/og/og-default.png">
+    <meta property="og:site_name" content="KANKAKUクエスト">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KANKAKUクエスト — あなたの感覚ジョブ診断">
+    <meta name="twitter:description" content="称号とレーダーチャートで感覚の傾向を見える化。">
+    <meta name="twitter:image" content="https://manakuronissy.github.io/og/og-default.png">
+
     <!-- Chart.js（レーダーチャート用） -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <style>
       :root{
         --bg:#f7f8fb; --card:#fff; --ink:#0f172a; --muted:#616b7c; --brand:#2563eb; --brand2:#0f172a;
@@ -40,15 +57,15 @@
       .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; transition:filter .15s ease}
       .likert button.active{outline:2px solid #facc15; border-color:#facc15}
       /* 回答ボタンの色分け（v0〜v4） */
-      .likert .v0{ background:#e6f7ec; }  /* あてはまらない：淡い緑 */
+      .likert .v0{ background:#e6f7ec; }
       .likert .v0:hover{ filter:brightness(.98); }
-      .likert .v1{ background:#fff8db; }  /* すこし：薄黄色 */
+      .likert .v1{ background:#fff8db; }
       .likert .v1:hover{ filter:brightness(.98); }
-      .likert .v2{ background:#ffefaf; }  /* ときどき：中黄 */
+      .likert .v2{ background:#ffefaf; }
       .likert .v2:hover{ filter:brightness(.98); }
-      .likert .v3{ background:#fde68a; }  /* よく：やや濃い黄 */
+      .likert .v3{ background:#fde68a; }
       .likert .v3:hover{ filter:brightness(.97); }
-      .likert .v4{ background:#facc15; }  /* とても：濃い黄 */
+      .likert .v4{ background:#facc15; }
       .likert .v4:hover{ filter:brightness(.97); }
 
       .cols{display:grid; gap:16px}
@@ -112,6 +129,7 @@
       const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2（固定28問）
       const DUAL_THRESHOLD = 70; // 両極端（dual）判定のしきい値（%）
 
+      // 画像パス（あなたの /images に一致）
       const IMAGES = {
         title: 'images/title-image.png',
         rolesHyper: {
@@ -132,8 +150,8 @@
           tempPain:  'images/job-tempPain-hypo.png',
           movement:  'images/job-movement-hypo.png'
         },
-        balanced: 'images/job-nomal.png', // バランス型
-        dual:     'images/job-dualblade.png' // 両極端：双剣士（差し替え可）
+        balanced: 'images/job-nomal.png',  // バランス型（ファイル名は "nomal" でOK）
+        dual:     'images/job-dualblade.png'
       };
 
       const TITLES = {
@@ -155,12 +173,8 @@
           tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
           movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
         },
-        dual: { // 両極端専用
-          any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' }
-        },
-        normal: { // 両方が低い（ノーマライザー）
-          any: { t: 'バランス型：ノーマライザー', role: 'ノーマライザー' }
-        }
+        dual: { any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' } },
+        normal: { any: { t: 'バランス型：ノーマライザー', role: 'ノーマライザー' } }
       };
 
       /* ▼▼ SNS用：役職コメント（50字内トリム用に使用） ▼▼ */
@@ -303,17 +317,14 @@
         const effLen = t => t.length - (url.length - urlLen);
         const limit = 140;
         if (effLen(text) <= limit) return text;
-        // まずコメントを短い一文に
         const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
         const lines2 = [...lines];
         lines2[4] = mini4;
         text = lines2.join(nl);
         if (effLen(text) <= limit) return text;
-        // 次に空行を一つ削る
         const lines3 = lines2.filter((l,i)=>!(i===1));
         text = lines3.join(nl);
         if (effLen(text) <= limit) return text;
-        // 最後はコメント行を削除
         const lines4 = lines3.filter((l,i)=> i!==3);
         text = lines4.join(nl);
         return text;
@@ -337,7 +348,7 @@
       function renderStart(){
         app.innerHTML = `
           <div class="grid">
-            <div class="card hero"><img src="IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
+            <div class="card hero"><img src="${IMAGES.title}" alt="KANKAKUクエスト タイトル"></div>
             <div class="card" style="text-align:center">
               <h1>あなたの感覚ジョブ診断</h1>
               <p class="muted">
@@ -354,7 +365,7 @@
       }
 
       function startQuestions(){
-        qs = pickQuestions(QUESTION_COUNT); // 軸ごとに必須28問を収集
+        qs = pickQuestions(QUESTION_COUNT);
         answers = {}; index = 0;
         renderQuestion();
       }
@@ -366,7 +377,7 @@
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
           <div class="grid">
-            <div class="progress"><div style="width:progress}%"></div></div>
+            <div class="progress"><div style="width:${progress}%"></div></div>
             <div class="card" style="text-align:center">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
                 <div><span class="badge">${AXES.find(a=>a.key===q.axis).label}</span></div>
@@ -387,7 +398,7 @@
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = o.label;
-          btn.className='button v'+o.v; // 色クラス付与
+          btn.className='button v'+o.v;
           btn.setAttribute('role','radio');
           const isOn = answered===o.v;
           if(isOn) btn.classList.add('active');
@@ -463,7 +474,6 @@
           headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向が${adjective}でした。`;
         }
 
-        // 役職コメント（結果ページ表示用）
         const roleComment =
           overall==='balanced' ? ROLE_COMMENTS.balanced :
           overall==='dual'     ? ROLE_COMMENTS.dual :
@@ -502,6 +512,9 @@
               </div>
               <div class="small muted" style="text-align:center">
                 改行と空行で読みやすく整形された短文（可能な限り140字以内）＋短いリンクで投稿します。
+              </div>
+              <div style="margin-top:10px; text-align:center">
+                <button id="savePngBtn" class="button">結果を画像保存（PNG）</button>
               </div>
               <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button">もう一度調べる</button></div>
             </div>
@@ -551,7 +564,7 @@
           ctx.parentNode.replaceWith(fallback);
         }
 
-        // シェア（改行入り・空行あり）
+        // 共有
         const shortText = buildShortShareText({ title: titleObj.t, level, overall, dominant });
         document.getElementById('shareXlink').onclick = () => {
           const t = encodeURIComponent(shortText);
@@ -561,6 +574,17 @@
           const u = encodeURIComponent(baseURL());
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
         };
+
+        // PNG保存
+        const saveBtn = document.getElementById('savePngBtn');
+        if (saveBtn) {
+          saveBtn.onclick = () => saveResultPng({
+            title: titleObj.t,
+            level,
+            roleImgSrc: roleImg,
+            chartCanvasId: 'radar'
+          });
+        }
 
         document.getElementById('retryBtn').onclick = () => { qs=[]; answers={}; index=0; renderStart(); };
         window.scrollTo({top:0, behavior:'smooth'});
@@ -581,8 +605,7 @@
       }
 
       /* ================ ロジック ================ */
-      function pickQuestions(count){
-        // 軸ごとに過敏2・鈍麻2を集める（固定で28問）
+      function pickQuestions(){
         const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
         BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
         const picked = [];
@@ -591,7 +614,7 @@
           const Y = shuffle(byAxis[ax.key].hypo ).slice(0,2);
           picked.push(...H, ...Y);
         });
-        return shuffle(picked); // ランダム順で出題
+        return shuffle(picked);
       }
 
       // フィッシャー–イェーツシャッフル
@@ -632,12 +655,11 @@
         const maxHyper = Math.max(...radar.map(d=>d.hyper));
         const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
-        const EPS = 6;   // 平均差のしきい値（%）
-        const LOW = 25;  // 低強度のしきい値（これ以下ならバランス型）
-        const MID = 55;  // 中強度のしきい値（これ以上が一つでもあれば原則バランスにしない）
-        const DOM_GAP = 8; // 代表軸の過敏vs鈍麻の差がこれ以上なら優勢側に倒す
+        const EPS = 6;
+        const LOW = 25;
+        const MID = 55;
+        const DOM_GAP = 8;
 
-        // 全体判定
         let overall;
         if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
           overall = 'dual';
@@ -649,11 +671,9 @@
           overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
         }
 
-        // 代表軸（最も強い軸）
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
-        // 平均でバランス判定になったが代表軸の差が大きい場合は優勢側に倒す
         if (overall === 'balanced') {
           const domProbe = radar.find(r=>r.axisKey===dominantKey);
           if (domProbe) {
@@ -665,11 +685,10 @@
           }
         }
 
-        // レベル算出
         const dom = radar.find(r=>r.axisKey===dominantKey);
         const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
-        const lvDual     = pctToLv(Math.min(maxHyper, maxHypo)); // 両方の強さの下限をレベル化
+        const lvDual     = pctToLv(Math.min(maxHyper, maxHypo));
 
         return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual };
       }
@@ -766,15 +785,101 @@
         srcs.forEach(s => { const i = new Image(); i.src = s; });
       }
 
+      // PNG保存ユーティリティ
+      async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
+        try{
+          const roleImg = await loadImage(roleImgSrc);
+          const chart = document.getElementById(chartCanvasId);
+          if (!chart) { alert('チャートが見つかりませんでした'); return; }
+
+          const W = 1080, P = 48;
+          const out = document.createElement('canvas');
+          out.width = W;
+          out.height = 1600;
+          const g = out.getContext('2d');
+
+          g.fillStyle = '#ffffff'; g.fillRect(0,0,out.width,out.height);
+          let y = P;
+
+          g.fillStyle = '#0f172a';
+          g.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+          g.fillText('KANKAKUクエスト 診断結果', P, y); y += 64;
+
+          g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+          g.fillText(`称号：${title}`, P, y); y += 52;
+          g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+          g.fillText(`レベル：Lv${String(level).padStart(2,'0')}`, P, y); y += 36 + 24;
+
+          const roleW = Math.min(W - P*2, 560);
+          const roleH = Math.round(roleW * (roleImg.height/roleImg.width));
+          g.drawImage(roleImg, P, y, roleW, roleH); y += roleH + 32;
+
+          const chartW = Math.min(W - P*2, 720);
+          g.drawImage(chart, P, y, chartW, 540); y += 540 + 28;
+
+          g.fillStyle = '#64748b';
+          g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+          wrapText(g, '※ この結果は自己回答に基づく簡易チェックです。医学的な診断を提供するものではありません。', P, y, W - P*2, 30);
+
+          const dataUrl = out.toDataURL('image/png');
+
+          // 共有APIが使えれば優先
+          try{
+            const file = await dataUrlToFile(dataUrl, 'kankaku-result.png');
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: 'KANKAKUクエスト結果' });
+              return;
+            }
+          }catch(_){}
+
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = 'kankaku-result.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }catch(e){
+          console.error(e);
+          alert('画像の保存に失敗しました。ページを再読み込みして再試行してください。');
+        }
+      }
+      function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const chars = text.split('');
+        let line = '';
+        for (let i=0;i<chars.length;i++){
+          const test = line + chars[i];
+          if (ctx.measureText(test).width > maxWidth && i>0){
+            ctx.fillText(line, x, y);
+            line = chars[i];
+            y += lineHeight;
+          } else {
+            line = test;
+          }
+        }
+        ctx.fillText(line, x, y);
+      }
+      function loadImage(src) {
+        return new Promise((res, rej) => {
+          const img = new Image();
+          img.onload = () => res(img);
+          img.onerror = rej;
+          // 同一オリジン配信なので crossOrigin は不要
+          img.src = src;
+        });
+      }
+      async function dataUrlToFile(dataUrl, filename){
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        return new File([blob], filename, { type: 'image/png' });
+      }
+
       /* ================ 初期化（ロゴはタップ無効のまま） ================ */
       window.addEventListener('DOMContentLoaded', () => {
         const btnTop = document.getElementById('seminarBtnTop');
         if (btnTop) btnTop.href = SEMINAR_URL;
 
-        // セミナーボタン文言の自動切替
         updateSeminarButton();
 
-        // 画像を先読みして結果画面のシフトを抑える
         const roleImgs = [
           IMAGES.balanced, IMAGES.dual, IMAGES.title,
           ...Object.values(IMAGES.rolesHyper),
