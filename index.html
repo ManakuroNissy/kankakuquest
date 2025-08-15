@@ -613,24 +613,25 @@ document.getElementById('shareX').onclick = ()=>{
         }catch(e){ alert('コピーに失敗しました…'); }
       };
 
-+ // PNG保存（TOP3も画像に入れる）
-  const saveBtn = document.getElementById('savePngBtn');
-  if (saveBtn) {
-+   const top3 = s.radar
-+     .map(chooseJobForAxis)
-+     .sort((a,b)=> b.score - a.score)
-+     .slice(0,3);
-    saveBtn.onclick = () => saveResultPng({
--     title: titleObj.t, level, roleImgSrc: roleImg, chartCanvasId: 'radar'
-+     title: titleObj.t,
-+     level,
-+     roleImgSrc: roleImg,
-+     chartCanvasId: 'radar',
-+     top3,                      // ★追加
-+     pageUrl: baseURL(),        // ★フッタ用
-+     hashtags: 'KANKAKUクエスト / 感覚ジョブ診断', // ★任意
-    });
-  }
+// PNG保存（TOP3も画像に入れる）
+const saveBtn = document.getElementById('savePngBtn');
+if (saveBtn) {
+  const top3 = s.radar
+    .map(chooseJobForAxis)
+    .sort((a,b)=> b.score - a.score)
+    .slice(0,3);
+
+  saveBtn.onclick = () => saveResultPng({
+    title: titleObj.t,
+    level,
+    roleImgSrc: roleImg,
+    chartCanvasId: 'radar',
+    top3,                       // 画像にTOP3を入れる
+    pageUrl: baseURL(),         // 画像下フッタのURL
+    hashtags: 'KANKAKUクエスト / 感覚ジョブ診断',
+  });
+}
+
       document.getElementById('retryBtn').onclick = () => { qs=[]; answers={}; index=0; renderStart(); };
 
       // スティッキー告知バー
@@ -1176,32 +1177,34 @@ y += chartH + GAP;
    }
    y += top3RowH + GAP;
  }
-    // 免責
-    g.fillStyle = '#64748b';
-    g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-    drawWrap(g, disclaimer, P, y, COL, 34);
+// 免責
+g.fillStyle = '#64748b';
+g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+drawWrap(g, disclaimer, P, y, COL, 34);
+y += GAP;
 
-    + y += GAP;
+// フッタ（左：URL、中：ハッシュタグ、右：バージョン）
+g.font = '16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+g.fillStyle = '#475569';
 
- // フッタ（左：URL、中：ハッシュタグ、右：バージョン）
- g.font = '16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
- g.fillStyle = '#475569';
- // 左
- if (pageUrl){
-   g.textAlign = 'left';
-   g.fillText(pageUrl, P, y + 22);
- }
- // 中
- if (hashtags){
-   g.textAlign = 'center';
-   g.fillText(hashtags, W/2, y + 22);
- }
- // 右
- if (versionText){
-   g.textAlign = 'right';
-   g.fillText(versionText, W - P, y + 22);
- }
- g.textAlign = 'left';
+// 左
+if (pageUrl){
+  g.textAlign = 'left';
+  g.fillText(pageUrl, P, y + 22);
+}
+// 中
+if (hashtags){
+  g.textAlign = 'center';
+  g.fillText(hashtags, W/2, y + 22);
+}
+// 右（APP_VERSION は別スクリプトで定義済み）
+const versionText = (typeof APP_VERSION!=='undefined') ? `v${APP_VERSION}` : '';
+if (versionText){
+  g.textAlign = 'right';
+  g.fillText(versionText, W - P, y + 22);
+}
+g.textAlign = 'left';
+
 
     // ダウンロード or 共有
     const dataUrl = out.toDataURL('image/png');
@@ -1320,7 +1323,7 @@ function renderTopJobs(radar){
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.24";
+  const APP_VERSION = "1.241";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
