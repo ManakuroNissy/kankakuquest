@@ -94,6 +94,16 @@
       .level-grid{grid-template-columns:1fr}
       .share .buttons .button{width:100%}
       .radar-wrap{height:300px; max-width:100%;}
+      /* TOP3見せ用 */
+.top-jobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.top-jobs .job-card{border:1px solid var(--ring);border-radius:12px;padding:10px;background:#fff}
+.top-jobs .job-card img{width:100%;height:auto;border-radius:10px}
+
+/* ランクに応じて色分け（控えめ） */
+.rank-1{border-color:#f59e0b;background:#fffbeb}
+.rank-2{border-color:#94a3b8;background:#f1f5f9}
+.rank-3{border-color:#c084fc;background:#faf5ff}
+
     }
   </style>
 </head>
@@ -432,6 +442,8 @@ const FUN_LINES = {
             </div>
           </div>
 
+ ${ renderTopJobs(s.radar) }
+
           <div class="card">
             <h3>各特性のレベル</h3>
             <div class="level-grid">
@@ -675,18 +687,23 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
 }
 
 
-    function renderAxisLevelBadges(radar){
-      return radar.map(d=>{
-        const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-        const lv = pctToLv(Math.max(d.hyper, d.hypo));
-        return `
-          <div class="level-item">
-            <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
-            <div class="lv">Lv${String(lv).padStart(2,'0')}</div>
-          </div>
-        `;
-      }).join('');
-    }
+function renderAxisLevelBadges(radar){
+  // 強い順に並べ替え（各軸の max(hyper,hypo)）
+  const ordered = radar
+    .map(d => ({...d, maxScore: Math.max(d.hyper, d.hypo)}))
+    .sort((a,b) => b.maxScore - a.maxScore);
+
+  return ordered.map(d=>{
+    const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
+    const lv = pctToLv(Math.max(d.hyper, d.hypo));
+    return `
+      <div class="level-item">
+        <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
+        <div class="lv">Lv${String(lv).padStart(2,'0')}</div>
+      </div>
+    `;
+  }).join('');
+}
 
     function pickQuestions(count){
       const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}]));
@@ -1112,6 +1129,40 @@ y += chartH + GAP;
     function hideSticky(){ const el = document.getElementById('stickyCta'); if(el) el.hidden = true; }
 
     /* ===== ユーティリティ ===== */
+
+// 各軸から「どっち側のジョブが強いか」を1つ選ぶ
+function chooseJobForAxis(d){
+  const mode = (d.hyper >= d.hypo) ? 'hyper' : 'hypo';
+  const score = (mode==='hyper') ? d.hyper : d.hypo;
+  const key = d.axisKey;
+  const titleObj = TITLES[mode][key];
+  const img = (mode==='hyper') ? IMAGES.rolesHyper[key] : IMAGES.rolesHypo[key];
+  const axisLabel = d.axis;
+  const level = pctToLv(score);
+  return { axisKey:key, axisLabel, mode, score, level, title:titleObj.t, role:titleObj.role, img };
+}
+
+// TOP3カードを描画
+function renderTopJobs(radar){
+  const jobs = radar.map(chooseJobForAxis).sort((a,b)=> b.score - a.score);
+  const top3 = jobs.slice(0,3);
+  return `
+    <div class="card">
+      <h3>上位ジョブ TOP3</h3>
+      <div class="top-jobs">
+        ${top3.map((j,i)=>`
+          <div class="job-card rank-${i+1}">
+            <div class="small muted">${j.axisLabel}／${j.mode==='hyper'?'過敏':'鈍麻'}</div>
+            ${j.img ? `<img src="${j.img}" alt="${j.title}">` : ``}
+            <div style="font-weight:700;margin-top:6px">${j.title}</div>
+            <div class="lv">Lv${String(j.level).padStart(2,'0')}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+    
     function preload(srcs=[]){ srcs.forEach(s => { const i = new Image(); i.src = s; }); }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -1132,7 +1183,7 @@ y += chartH + GAP;
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.2";
+  const APP_VERSION = "1.21";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
