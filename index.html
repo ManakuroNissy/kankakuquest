@@ -136,7 +136,7 @@
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
       const QUESTION_COUNT = 28;
-      const DUAL_THRESHOLD = 70;
+      const DUAL_THRESHOLD = 70; // 参照用（今回の主要分岐は60基準）
 
       // 画像パス
       const IMAGES = {
@@ -355,13 +355,23 @@
 
       function startQuestions(){
         qs = pickQuestions(QUESTION_COUNT);
+        if (!Array.isArray(qs) || qs.length !== QUESTION_COUNT) {
+          console.warn('QUESTION_COUNTと実際の質問数が一致しません。', qs?.length);
+          qs = pickQuestions(QUESTION_COUNT);
+        }
         answers = {}; index = 0;
         renderQuestion();
       }
 
       function renderQuestion(){
         const total = qs.length;
+
+        // ★ 28問で止まらないための境界ガード
+        if (index >= total) { renderResult(); return; }
+
         const q = qs[index];
+        if (!q) { renderResult(); return; }
+
         const answered = answers[q.id];
         const progress = Math.round(Object.keys(answers).length/total*100);
         app.innerHTML = `
@@ -413,11 +423,23 @@
       }
 
       function selectAndNext(value){
-        const q = qs[index];
-        answers[q.id] = value;
         const total = qs.length;
-        if(index+1 < total){ index++; renderQuestion(); }
-        else { renderResult(); }
+        const q = qs[index];
+        if (q) { answers[q.id] = value; }
+
+        index++;
+
+        if (index >= total) {
+          try { renderResult(); }
+          catch (e) {
+            console.error(e);
+            alert('結果の描画でエラーが発生しました。ページを再読み込みして再試行してください。');
+            qs = []; answers = {}; index = 0;
+            renderStart();
+          }
+        } else {
+          renderQuestion();
+        }
       }
 
       function renderResult(){
@@ -584,7 +606,7 @@
       function renderAxisLevelBadges(radar){
         return radar.map(d=>{
           const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-        const lv = pctToLv(Math.max(d.hyper, d.hypo));
+          const lv = pctToLv(Math.max(d.hyper, d.hypo));
           return `
             <div class="level-item">
               <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
@@ -641,33 +663,21 @@
         const maxHyper = Math.max(...radar.map(d=>d.hyper));
         const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
-        const EPS = 6, LOW = 25, MID = 55, DOM_GAP = 8;
-
+        // === 判定ルール：<60 は balanced / ≥60 で hyper&hypo 両方高ければ dual / その他 hyper|hypo ===
         let overall;
-        if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
+        if (Math.min(maxHyper, maxHypo) >= 60) {
           overall = 'dual';
-        } else if (maxAny <= LOW) {
-          overall = 'balanced';
-        } else if (Math.abs(hyperAvg - hypoAvg) <= EPS && maxAny < MID) {
+        } else if (maxAny < 60) {
           overall = 'balanced';
         } else {
           overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
         }
 
+        // 優勢軸
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
-        if (overall === 'balanced') {
-          const domProbe = radar.find(r=>r.axisKey===dominantKey);
-          if (domProbe) {
-            const gap = Math.abs(domProbe.hyper - domProbe.hypo);
-            const domMax = Math.max(domProbe.hyper, domProbe.hypo);
-            if (gap >= DOM_GAP && domMax >= 45) {
-              overall = (domProbe.hyper > domProbe.hypo) ? 'hyper' : 'hypo';
-            }
-          }
-        }
-
+        // レベル計算
         const dom = radar.find(r=>r.axisKey===dominantKey);
         const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
@@ -706,6 +716,30 @@
           hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
         },
       };
+
+      function renderAxisFeedback(radar){
+        const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
+        const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
+                            .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
+        const list = (picks.length? picks: scored.sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo)).slice(0,3));
+        return list.map(s=>{
+          const mode = s.hyper> s.hypo ? 'hyper' : (s.hypo> s.hyper? 'hypo':'mix');
+          const book = COMMENT_BOOK[s.key];
+          const strong = mode==='mix'? [...book.hyper.strong,...book.hypo.strong].slice(0,2) : book[mode].strong;
+          const challenge = mode==='mix'? [...book.hyper.challenge,...book.hypo.challenge].slice(0,2) : book[mode].challenge;
+          const tips = mode==='mix'? [...book.hyper.tips,...book.hypo.tips].slice(0,3) : book[mode].tips;
+          return `
+            <div class="card">
+              <h3>${s.label}</h3>
+              <div class="small muted">過敏:${s.hyper}% / 鈍麻:${s.hypo}%</div>
+              <div class="cols" style="margin-top:8px">
+                <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>${strong.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>${challenge.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+                <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+              </div>
+            </div>`;
+        }).join('');
+      }
 
       function renderLowOverallCard(){
         return `
@@ -809,12 +843,6 @@
         return new File([blob], filename, { type: 'image/png' });
       }
 
-      // ユーティリティ（今はヘッダーボタンを使わないため未使用でもOK）
-      function formatJPDate(iso){
-        const d = new Date(iso + 'T00:00:00');
-        const w = ['日','月','火','水','木','金','土'][d.getDay()];
-        return `${d.getMonth()+1}/${d.getDate()}(${w})`;
-      }
       function preload(srcs=[]){
         srcs.forEach(s => { const i = new Image(); i.src = s; });
       }
