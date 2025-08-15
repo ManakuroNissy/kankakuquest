@@ -860,15 +860,15 @@ async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar'
     y = drawWrap(g, `レベル：Lv${String(level).padStart(2,'0')}`, P, y, COL, 44);
     y += GAP;
 
-    // 役職イラスト（左寄せ／コンテナ内）
-    g.drawImage(roleImg, P, y, roleW, roleH);
-    y += roleH + GAP;
+// 役職イラスト（中央寄せ）
+g.drawImage(roleImg, P + (COL - roleW) / 2, y, roleW, roleH);
+y += roleH + GAP;
 
-    // チャート（Chart.jsの<canvas>をそのまま描画）
-    // まだ描画中の可能性に備えて1フレーム待つ
-    await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
-    g.drawImage(chart, P, y, chartW, chartH);
-    y += chartH + GAP;
+// チャート（中央寄せ）
+await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+g.drawImage(chart, P + (COL - chartW) / 2, y, chartW, chartH);
+y += chartH + GAP;
+
 
     // 免責
     g.fillStyle = '#64748b';
