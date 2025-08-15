@@ -94,15 +94,35 @@
       .level-grid{grid-template-columns:1fr}
       .share .buttons .button{width:100%}
       .radar-wrap{height:300px; max-width:100%;}
-      /* TOP3見せ用 */
-.top-jobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.top-jobs .job-card{border:1px solid var(--ring);border-radius:12px;padding:10px;background:#fff}
-.top-jobs .job-card img{width:100%;height:auto;border-radius:10px}
+      
+/* TOP3見せ用（3列固定） */
+.top-jobs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 常に3列 */
+  gap: 8px;
+  align-items: start;
+}
 
-/* ランクに応じて色分け（控えめ） */
-.rank-1{border-color:#f59e0b;background:#fffbeb}
-.rank-2{border-color:#94a3b8;background:#f1f5f9}
-.rank-3{border-color:#c084fc;background:#faf5ff}
+.top-jobs .job-card {
+  border: 1px solid var(--ring);
+  border-radius: 10px;
+  padding: 6px;
+  background: #fff;
+  text-align: center;
+}
+
+.top-jobs .job-card img {
+  width: 70px;       /* 画像幅を小さく固定 */
+  height: auto;
+  margin: 4px auto;
+  display: block;
+  border-radius: 6px;
+}
+
+/* ランク色（控えめ） */
+.rank-1 { border-color: #f59e0b; background: #fffbeb; }
+.rank-2 { border-color: #94a3b8; background: #f1f5f9; }
+.rank-3 { border-color: #c084fc; background: #faf5ff; }
 
     }
   </style>
@@ -1183,7 +1203,7 @@ function renderTopJobs(radar){
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.21";
+  const APP_VERSION = "1.22";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
