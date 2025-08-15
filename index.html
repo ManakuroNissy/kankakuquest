@@ -202,6 +202,44 @@
       { key:'movement', label:'動き' }
     ];
 
+// === 拡散向けコピー設定 ===
+const FUNNY_COPY_ON = true; // ←面白コメントの自動追加をON/OFFできるトグル
+const SHARE_HASH = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
+
+    // === 軽めのファンタジー寄り一言（配慮を保つ） ===
+const FUN_LINES = {
+  balanced: '今日はバランス型。状況対応力に+3のバフ。',
+  dual:     '場面で切り替わる“二刀流”。使い分けが勝利の鍵。',
+  hearing: {
+    hyper: '静寂センサー感度UP。ノイズ対策で一気に快適。',
+    hypo:  '雑踏でもマイペース。ドラム隊の心臓を持つ人。'
+  },
+  vision: {
+    hyper: '細部まで見抜く“鷹の目”。光量ダウンでMP節約。',
+    hypo:  '暗所に強い夜目タイプ。要点マーキングが相棒。'
+  },
+  touch: {
+    hyper: '素材判定Sランク。タグカットでストレス回避。',
+    hypo:  '圧で落ち着くタンク型。小キズチェックを忘れずに。'
+  },
+  smell: {
+    hyper: '香りの鑑定士。換気とマスクで快適ゾーンを確保。',
+    hypo:  '強い香りも動じない職人肌。期限表示は相棒。'
+  },
+  taste: {
+    hyper: '味の書記官。食感と香りの微調整で世界が広がる。',
+    hypo:  '刺激に強い冒険胃袋。バランス表で安定化。'
+  },
+  tempPain: {
+    hyper: '環境センサー鋭敏。重ね着＆こまめ休憩で持久戦◎。',
+    hypo:  '気候タフネス持ち。水分と客観温度で安全確保。'
+  },
+  movement: {
+    hyper: '揺れ検知A。視点固定で酔い耐性アップ。',
+    hypo:  'スピード仲良し。安全ルールで楽しく攻略。'
+  }
+};
+    
     /* ================ 質問 ================ */
     const BANK = [
       // 聴覚
@@ -521,17 +559,63 @@
       return '';
     }
 
-    function buildShareText({title, level, finalType, overallType, dominant}){
-      const hash = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
-      const head = '【診断結果】';
-      const lv = 'Lv' + String(level).padStart(2,'0');
-      const axisLabel = getAxisLabel(dominant);
-      let tendency = '';
-      if (finalType === 'dual') tendency = '過敏と鈍麻の“両極端”タイプ！';
-      else if (finalType === 'balanced') tendency = '今回は偏り少なめのバランス型！';
-      else tendency = (axisLabel || '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
-      return `${head}\n称号「${title}」 ${lv}\n${tendency}\n${hash}`;
+    /* ===== シェア文（配慮＋ちょい遊び） ===== */
+function buildShareText({ title, level, finalType, overallType, dominant }){
+  // 面白コメントを切り替え可能
+  if (!FUNNY_COPY_ON){
+    const axisLabel = getAxisLabel(dominant);
+    const head = '【感覚クエスト⚔️診断結果】';
+    const lv = 'Lv' + String(level).padStart(2,'0');
+    let tendency = '';
+    if (finalType === 'dual') {
+      tendency = '過敏と鈍麻の“両極端”タイプ！';
+    } else if (finalType === 'balanced') {
+      tendency = '今回は偏り少なめのバランス型！';
+    } else {
+      tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
     }
+    return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + SHARE_HASH;
+  }
+
+  const head = '【診断結果】';
+  const lv = 'Lv' + String(level).padStart(2,'0');
+  const axisLabel = getAxisLabel(dominant);
+
+  // ①中立の傾向文（配慮寄り）
+  let tendency = '';
+  if (finalType === 'dual') {
+    tendency = '過敏と鈍麻の“両極端”タイプ！';
+  } else if (finalType === 'balanced') {
+    tendency = '今回は偏り少なめのバランス型！';
+  } else {
+    tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
+  }
+
+  // ②軽いファンタジー寄り一言（状況改善のヒント系）
+  let fun = '';
+  if (finalType === 'balanced') {
+    fun = FUN_LINES.balanced;
+  } else if (finalType === 'dual') {
+    fun = FUN_LINES.dual;
+  } else if (FUN_LINES[dominant] && FUN_LINES[dominant][overallType]) {
+    fun = FUN_LINES[dominant][overallType];
+  }
+
+  // ③ゆるいCTA（参加/共感を促すが強制しない）
+  const cta = 'あなたは何タイプ？';
+
+  // 仕上げ（280文字対策で短文を積む）
+  // URLはX共有側で別途つけてもOKですが、現状はテキストのみなのでここでは付けません。
+  return [
+    head,
+    '称号「' + title + '」 ' + lv,
+    tendency,
+    fun ? '— ' + fun : '',
+    cta,
+    SHARE_HASH
+  ].filter(Boolean).join('\n');
+}
+
 
     function renderAxisLevelBadges(radar){
       return radar.map(d=>{
