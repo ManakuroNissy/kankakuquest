@@ -868,18 +868,23 @@ function buildShareText(arg){
     }
     function hideSticky(){ const el = document.getElementById('stickyCta'); if(el) el.hidden = true; }
 
-    /* ===== ユーティリティ ===== */
-    function preload(srcs=[]){ srcs.forEach(s => { const i = new Image(); i.src = s; }); }
+  /* ===== ユーティリティ ===== */
+  function preload(srcs = []) {
+    srcs.forEach((s) => {
+      const i = new Image();
+      i.src = s;
+    });                 // ← forEach を閉じる
+  }                      // ← function preload を閉じる
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const roleImgs = [
-        IMAGES.balanced, IMAGES.dual, IMAGES.title,
-        ...Object.values(IMAGES.rolesHyper),
-        ...Object.values(IMAGES.rolesHypo)
-      ].filter(Boolean);
-      preload(roleImgs);
-      renderStart();
-    });
-  </script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const roleImgs = [
+      IMAGES.balanced, IMAGES.dual, IMAGES.title,
+      ...Object.values(IMAGES.rolesHyper),
+      ...Object.values(IMAGES.rolesHypo)
+    ].filter(Boolean);
+    preload(roleImgs);
+    renderStart();
+  });
+</script>
 </body>
 </html>
