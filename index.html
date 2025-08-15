@@ -2,13 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>KANKAKUクエスト — あなたの感覚ジョブ診断</title>
 
-  <!-- ===== 静的OGP ===== -->
+  <!-- ===== OGP ===== -->
   <meta property="og:title" content="KANKAKUクエスト — あなたの感覚ジョブ診断">
   <meta property="og:description" content="7つの感覚（聴覚/視覚/触覚/嗅覚/味覚/温度・痛み/動き）を簡易チェック。称号とレーダーチャートを表示。">
   <meta property="og:type" content="website">
@@ -20,53 +17,43 @@
   <meta name="twitter:description" content="称号とレーダーチャートで感覚の傾向を見える化。">
   <meta name="twitter:image" content="https://manakuronissy.github.io/og/og-default.png">
 
+  <!-- 404回避の簡易favicon -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='84' fill='white'%3EQ%3C/text%3E%3C/svg%3E" />
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
-    :root{
-      --bg:#f7f8fb; --card:#fff; --ink:#0f172a; --muted:#616b7c; --brand:#2563eb; --brand2:#0f172a;
-      --ring:#e5e7eb; --good:#16a34a; --warn:#ea580c;
-    }
+    :root{ --bg:#f7f8fb; --card:#fff; --ink:#0f172a; --muted:#616b7c; --brand:#2563eb; --brand2:#0f172a; --ring:#e5e7eb; --good:#16a34a; --warn:#ea580c; }
     *{box-sizing:border-box}
     html{-webkit-text-size-adjust:100%;text-size-adjust:100%;max-width:100%;overflow-x:hidden;}
     body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:linear-gradient(#f7f8fb,#fff);max-width:100%;overflow-x:hidden;}
-
     img,svg,canvas,video{max-width:100%;height:auto;display:block}
     .seminar-banner{width:100%;height:auto;display:block}
-
     .container{max-width:960px; margin:0 auto; padding:16px}
     header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
     header .bar{display:flex; align-items:center; justify-content:space-between; padding:10px 16px}
     .brand{display:flex; gap:10px; align-items:center; cursor:default; text-decoration:none; color:inherit}
     .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
-
     .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
     .button.primary{background:var(--brand); color:#fff; border-color:transparent}
     .button[disabled]{opacity:.5; cursor:not-allowed}
-
-    /* シェアボタン */
     .button.x  { background:#000;   color:#fff; border-color:#000 }
     .button.fb { background:#1877F2; color:#fff; border-color:#1877F2 }
     .button.line { background:#00B900; color:#fff; border-color:#00B900 }
-
     .grid{display:grid; gap:16px}
     .card{background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:18px}
     .hero img{width:70%; max-width:800px; margin:0 auto; display:block}
     .progress{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden}
     .progress > div{height:100%; background:var(--brand2)}
-
     .likert{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px}
     .likert button{padding:10px 14px; border:1px solid var(--ring); border-radius:12px; transition:filter .15s ease}
     .likert button.active{outline:2px solid #facc15; border-color:#facc15}
-
     .likert .v0{ background:#e6f7ec; } .likert .v1{ background:#fff8db; }
     .likert .v2{ background:#ffefaf; } .likert .v3{ background:#fde68a; }
     .likert .v4{ background:#facc15; }
-
     .retry-button { background-color:#e53935; color:#fff; border:none; }
     .retry-button:hover { background-color:#c62828; }
-
     .cols{display:grid; gap:16px}
     @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
     .small{font-size:12px; color:#475569}
@@ -92,15 +79,9 @@
     .disclaimer{margin-top:10px; font-size:12px; color:#64748b; line-height:1.6}
     #homeLink{pointer-events:none; cursor:default}
     .radar-wrap{height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px; width:100%;}
-
-    /* スティッキー告知バー */
-    .sticky-cta{
-      position:fixed; left:0; right:0; bottom:0; z-index:50;
-      background:#0f172a; color:#fff; border-top:1px solid #1f2937;
-    }
+    .sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; background:#0f172a; color:#fff; border-top:1px solid #1f2937; }
     .sticky-cta .row{display:flex; gap:12px; align-items:center; justify-content:center; padding:10px 12px; flex-wrap:wrap}
     .sticky-cta .close{position:absolute; right:12px; top:8px; background:transparent; color:#cbd5e1; border:none; font-size:18px; cursor:pointer}
-
     @media(max-width:480px){
       .container{padding:12px}
       header .bar{padding:8px 12px}
@@ -122,7 +103,6 @@
       <a id="homeLink" class="brand" aria-label="KANKAKUクエスト">
         <div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div>
       </a>
-      <!-- ヘッダーに広告ボタンは出しません -->
     </div>
   </header>
 
@@ -145,89 +125,81 @@
   <script>
     /* ================= 設定 ================= */
     const SEMINAR_DATE = '2025-08-23';
-    const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88'; // ベース
+    const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
     const QUESTION_COUNT = 28;
-    const DUAL_THRESHOLD = 60; // ←拡散版ルール：「60以上」起点
+    const DUAL_THRESHOLD = 60;
 
     // 画像パス
     const IMAGES = {
       title: 'images/title-image.png',
       rolesHyper: {
-        hearing:   'images/job-elf-scout.png',
-        vision:    'images/job-wizard.png',
-        touch:     'images/job-guardian.png',
-        smell:     'images/job-poison-appraiser.png',
-        taste:     'images/job-gourmet.png',
-        tempPain:  'images/job-weather-mage.png',
-        movement:  'images/job-knight.png'
+        hearing:'images/job-elf-scout.png', vision:'images/job-wizard.png', touch:'images/job-guardian.png',
+        smell:'images/job-poison-appraiser.png', taste:'images/job-gourmet.png', tempPain:'images/job-weather-mage.png',
+        movement:'images/job-knight.png'
       },
       rolesHypo: {
-        hearing:   'images/job-hearing-hypo.png',
-        vision:    'images/job-vision-hypo.png',
-        touch:     'images/job-touch-hypo.png',
-        smell:     'images/job-smell-hypo.png',
-        taste:     'images/job-taste-hypo.png',
-        tempPain:  'images/job-tempPain-hypo.png',
-        movement:  'images/job-movement-hypo.png'
+        hearing:'images/job-hearing-hypo.png', vision:'images/job-vision-hypo.png', touch:'images/job-touch-hypo.png',
+        smell:'images/job-smell-hypo.png', taste:'images/job-taste-hypo.png', tempPain:'images/job-tempPain-hypo.png',
+        movement:'images/job-movement-hypo.png'
       },
       balanced: 'images/job-nomal.png',
-      dual:     'images/job-dualblade.png'
+      dual: 'images/job-dualblade.png'
     };
 
     const TITLES = {
       hyper: {
-        hearing:  { t: 'エルフ耳の斥候（スカウト）', role: 'スカウト' },
-        vision:   { t: '洞察の魔法使い（メイジ）', role: 'メイジ' },
-        touch:    { t: '結界の守護者（ガーディアン）', role: 'ガーディアン' },
-        smell:    { t: '毒の鑑定士（アルケミスト）', role: 'アルケミスト' },
-        taste:    { t: '美食の王子／姫（グルメ）', role: 'グルメ' },
-        tempPain: { t: '気候予報士（メイジ）', role: 'メイジ' },
-        movement: { t: '揺れセンサー搭載者（ナイト）', role: 'ナイト' },
+        hearing:{t:'エルフ耳の斥候（スカウト）', role:'スカウト'},
+        vision:{t:'洞察の魔法使い（メイジ）', role:'メイジ'},
+        touch:{t:'結界の守護者（ガーディアン）', role:'ガーディアン'},
+        smell:{t:'毒の鑑定士（アルケミスト）', role:'アルケミスト'},
+        taste:{t:'美食の王子／姫（グルメ）', role:'グルメ'},
+        tempPain:{t:'気候予報士（メイジ）', role:'メイジ'},
+        movement:{t:'揺れセンサー搭載者（ナイト）', role:'ナイト'}
       },
       hypo: {
-        hearing:  { t: '戦場の鼓手（バード）', role: 'バード' },
-        vision:   { t: '月影のハンター（ハンター）', role: 'ハンター' },
-        touch:    { t: '鉄皮のモンク（モンク）', role: 'モンク' },
-        smell:    { t: '炉心の鍛冶師（ブラックスミス）', role: 'ブラックスミス' },
-        taste:    { t: '香辛の冒険家（エクスプローラー）', role: 'エクスプローラー' },
-        tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
-        movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
+        hearing:{t:'戦場の鼓手（バード）', role:'バード'},
+        vision:{t:'月影のハンター（ハンター）', role:'ハンター'},
+        touch:{t:'鉄皮のモンク（モンク）', role:'モンク'},
+        smell:{t:'炉心の鍛冶師（ブラックスミス）', role:'ブラックスミス'},
+        taste:{t:'香辛の冒険家（エクスプローラー）', role:'エクスプローラー'},
+        tempPain:{t:'四季渡りのノマド（ノマド）', role:'ノマド'},
+        movement:{t:'竜騎のランサー（ドラグーン）', role:'ドラグーン'}
       },
-      dual:   { any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' } },
-      normal: { any: { t: 'バランス型：ノーマライザー', role: 'ノーマライザー' } }
+      dual:{ any:{ t:'感覚の双剣士（デュアルブレード）', role:'デュアルブレード' } },
+      normal:{ any:{ t:'バランス型：ノーマライザー', role:'ノーマライザー' } }
     };
 
     const ROLE_COMMENTS = {
       hyper: {
-        hearing:  '小さな音も聞き逃さない探索の達人。静寂の守護者。',
-        vision:   '光や動きの変化を見抜く鋭視のメイジ。隠し扉もお手の物。',
-        touch:    '風や布の質感まで察知する触覚の盾。心地よい装備選びの達人。',
-        smell:    '香りで世界を読み解く鑑定士。危険信号も素早くキャッチ。',
-        taste:    '味の物語を読み解く舌。料理は芸術、素材の個性は正直に。',
-        tempPain: '温度や痛みの変化を即察知。環境センサーで仲間を守る。',
-        movement: 'わずかな揺れも見逃さない守護騎士。空と海の旅は慎重派。'
+        hearing:'小さな音も聞き逃さない探索の達人。静寂の守護者。',
+        vision:'光や動きの変化を見抜く鋭視のメイジ。隠し扉もお手の物。',
+        touch:'風や布の質感まで察知する触覚の盾。心地よい装備選びの達人。',
+        smell:'香りで世界を読み解く鑑定士。危険信号も素早くキャッチ。',
+        taste:'味の物語を読み解く舌。料理は芸術、素材の個性は正直に。',
+        tempPain:'温度や痛みの変化を即察知。環境センサーで仲間を守る。',
+        movement:'わずかな揺れも見逃さない守護騎士。空と海の旅は慎重派。'
       },
       hypo: {
-        hearing:  '雑踏でも落ち着いて動ける耳のタフネス。嵐でも冷静。',
-        vision:   '薄暗い道も慌てない夜の狩人。洞窟探索は任せて。',
-        touch:    '衝撃にも動じない武闘僧。険しい道も踏破する持久力。',
-        smell:    '香りの渦中でも集中を切らさない職人肌。作業に没頭できる。',
-        taste:    '未知の料理に果敢に挑む冒険胃袋。刺激も楽しめる。',
-        tempPain: '気候変化にタフなノマド。暑さ寒さに振り回されにくい。',
-        movement: '回転や加速も面白がる空の戦士。スピードの相棒。'
+        hearing:'雑踏でも落ち着いて動ける耳のタフネス。嵐でも冷静。',
+        vision:'薄暗い道も慌てない夜の狩人。洞窟探索は任せて。',
+        touch:'衝撃にも動じない武闘僧。険しい道も踏破する持久力。',
+        smell:'香りの渦中でも集中を切らさない職人肌。作業に没頭できる。',
+        taste:'未知の料理に果敢に挑む冒険胃袋。刺激も楽しめる。',
+        tempPain:'気候変化にタフなノマド。暑さ寒さに振り回されにくい。',
+        movement:'回転や加速も面白がる空の戦士。スピードの相棒。'
       },
-      dual: '二つの感覚の刃を携え、あらゆる刺激に挑む戦術家。',
-      balanced: 'どんな環境でもマイペース。感覚の調律に長けたバランス職人。'
+      dual:'二つの感覚の刃を携え、あらゆる刺激に挑む戦術家。',
+      balanced:'どんな環境でもマイペース。感覚の調律に長けたバランス職人。'
     };
 
     const AXES = [
-      { key: 'hearing',  label: '聴覚' },
-      { key: 'vision',   label: '視覚' },
-      { key: 'touch',    label: '触覚' },
-      { key: 'smell',    label: '嗅覚' },
-      { key: 'taste',    label: '味覚' },
-      { key: 'tempPain', label: '温度/痛み' },
-      { key: 'movement', label: '動き' },
+      { key:'hearing',  label:'聴覚' },
+      { key:'vision',   label:'視覚' },
+      { key:'touch',    label:'触覚' },
+      { key:'smell',    label:'嗅覚' },
+      { key:'taste',    label:'味覚' },
+      { key:'tempPain', label:'温度/痛み' },
+      { key:'movement', label:'動き' }
     ];
 
     /* ================ 質問 ================ */
@@ -269,35 +241,22 @@
       { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて走ったりジャンプしたくなる' }
     ];
 
-    const SHORT_SUMMARY = {
-      hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい', hypo:'にぎやかでも集中しやすい／呼びかけを見落としがち' },
-      vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',       hypo:'暗所に強い／細かな変化は見落としやすい' },
-      touch:    { hyper:'素材感に敏感／チクチクやベタつきが苦手',       hypo:'圧刺激で落ち着く／小さなケガに気づきにくい' },
-      smell:    { hyper:'香りの差に鋭い／混ざったにおいが苦手',         hypo:'強いにおいも平気／危険なにおいに気づきにくい' },
-      taste:    { hyper:'味の違いに敏感／食べられる幅が狭くなりがち',   hypo:'刺激的な味が得意／塩分や辛味が多くなりがち' },
-      tempPain: { hyper:'変化を早く察知／気温や痛みで消耗しやすい',     hypo:'環境にタフ／暑さ寒さに気づくのが遅れがち' },
-      movement: { hyper:'揺れに敏感／人混みや乗り物酔いが出やすい',     hypo:'スピードに強い／安全確認が遅れがち' },
-      balanced: '偏りは少なめ。感じ方は状況次第。'
-    };
-
     const LIKERT_WEIGHT = {0:0.00, 1:0.08, 2:0.28, 3:0.65, 4:1.00};
     const LIKERT = [
       { v:0, label:'あてはまらない' },
       { v:1, label:'すこしあてはまる' },
       { v:2, label:'ときどきあてはまる' },
       { v:3, label:'よくあてはまる' },
-      { v:4, label:'とてもあてはまる' },
+      { v:4, label:'とてもあてはまる' }
     ];
 
     let qs = []; let answers = {}; let index = 0;
-    let moving = false; // 二重タップ防止
+    let moving = false;
     const app = document.getElementById('app');
 
-    function baseURL(){
-      return location.origin + location.pathname.replace(/index\.html$/,'');
-    }
+    const baseURL = () => location.origin + location.pathname.replace(/index\.html$/,'');
 
-    /* ===== 画面 ===== */
+    /* ===== START画面 ===== */
     function renderStart(){
       app.innerHTML = `
         <div class="grid">
@@ -313,14 +272,14 @@
             </div>
           </div>
         </div>`;
-      document.getElementById('startBtn').onclick=()=>{ startQuestions(); };
-      hideSticky(); // 開始時は非表示
+      document.getElementById('startBtn').onclick = startQuestions;
+      hideSticky();
       window.scrollTo(0,0);
     }
 
     function startQuestions(){
       qs = pickQuestions(QUESTION_COUNT);
-      answers = {}; index = 0; moving=false;
+      answers = {}; index = 0; moving = false;
       renderQuestion();
     }
 
@@ -334,7 +293,7 @@
           <div class="progress"><div style="width:${progress}%"></div></div>
           <div class="card" style="text-align:center">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
-<div><span class="badge">${getAxisLabel(q.axis)}</span></div>
+              <div><span class="badge">${getAxisLabel(q.axis)}</span></div>
               <div class="small">${index+1} / ${total}</div>
             </div>
             <div style="font-size:18px; margin-bottom:20px">${q.adult}</div>
@@ -351,29 +310,23 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = o.label;
-        btn.className='button v'+o.v;
+        btn.className = 'button v'+o.v;
         btn.setAttribute('role','radio');
         const isOn = answered===o.v;
         if(isOn) btn.classList.add('active');
         btn.setAttribute('aria-checked', isOn ? 'true' : 'false');
         btn.tabIndex = isOn || (answered==null && idx===0) ? 0 : -1;
 
-        btn.onclick=()=> selectAndNext(o.v);
+        btn.onclick = ()=> selectAndNext(o.v);
         btn.onkeydown = (e)=>{
-          if (e.key === 'ArrowRight' || e.key === 'ArrowDown'){
-            e.preventDefault();
-            const next = btn.nextElementSibling || wrap.firstElementChild; next.focus();
-          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
-            e.preventDefault();
-            const prev = btn.previousElementSibling || wrap.lastElementChild; prev.focus();
-          } else if (e.key === ' ' || e.key === 'Enter'){
-            e.preventDefault(); selectAndNext(o.v);
-          }
+          if (e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); (btn.nextElementSibling || wrap.firstElementChild).focus(); }
+          else if (e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); (btn.previousElementSibling || wrap.lastElementChild).focus(); }
+          else if (e.key===' ' || e.key==='Enter'){ e.preventDefault(); selectAndNext(o.v); }
         };
         wrap.appendChild(btn);
       });
 
-      document.getElementById('prevBtn').onclick=()=>{ if(index>0){ index--; renderQuestion(); } };
+      document.getElementById('prevBtn').onclick = ()=>{ if(index>0){ index--; renderQuestion(); } };
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
@@ -385,21 +338,18 @@
       const total = qs.length;
       if(index+1 < total){
         index++;
-        // DOMの再描画前に少し待って誤タップ防止
         setTimeout(()=>{ renderQuestion(); moving=false; }, 10);
       } else {
-        // 最終問：描画完了後に確実に結果へ
         setTimeout(()=>{ renderResult(); moving=false; }, 0);
       }
     }
 
-    /* ===== 結果 ===== */
+    /* ===== 結果画面 ===== */
     function renderResult(){
       const s = calcScores(qs, answers);
       const { radar, overall, dominant, maxAny, lvDominant, lvBalanced, lvDual } = s;
 
-      // ルール：最大値が60未満ならバランス型。過敏・鈍麻の両方で60以上の軸が少なくとも1つ→双剣士。
-      let finalType = overall.type; // calcScoresで付与
+      let finalType = overall.type;
       const dualAxes = s.dualAxes;
       if (maxAny < 60) finalType = 'balanced';
       else if (dualAxes.length > 0) finalType = 'dual';
@@ -472,7 +422,6 @@
             </div>
           </div>
 
-          <!-- 診断後だけ出す控えめPR -->
           <div class="card cta" aria-label="関連イベントのお知らせ">
             <div style="display:grid; gap:16px; grid-template-columns:1fr; align-items:start">
               <div class="subtle"><span class="badge pr">PR</span> 関連イベント</div>
@@ -480,12 +429,6 @@
               <div>
                 <h3>保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
                 <p class="subtle">診断結果（<strong>称号：${titleObj.t}</strong> / Lv${String(level).padStart(2,'0')}）に合わせて、日常の「しんどい」を軽くするヒントをお届けします。</p>
-                <ul>
-                  <li>音・光・衣服・におい・食事・温度/痛み・動きの見立て方</li>
-                  <li>家で今日からできる環境調整と声かけ</li>
-                  <li>学校・支援先への伝え方（合理的配慮のお願い文例）</li>
-                  <li>不登校期の過ごし方と復帰へのステップ</li>
-                </ul>
                 <div style="margin-top:10px">
                   <a id="seminarBtn" class="button primary" target="_blank">申し込みページ（Googleフォーム）</a>
                 </div>
@@ -503,32 +446,32 @@
             labels: s.radar.map(d=>d.axis),
             datasets: [
               { label:'過敏', data: s.radar.map(d=>d.hyper), fill:true, borderColor:'#111827', backgroundColor:'rgba(17,24,39,0.35)' },
-              { label:'鈍麻', data: s.radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
+              { label:'鈍麻', data: s.radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' }
             ]
           },
-          options: { responsive:true, maintainAspectRatio:false,
-            scales:{ r:{ suggestedMin:0, suggestedMax:100, ticks:{display:false},
-              pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } },
-            plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12,
-              font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } }
-  }
-});
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            scales:{ r:{
+              suggestedMin:0, suggestedMax:100,
+              ticks:{display:false},
+              pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }
+            }},
+            plugins:{ legend:{
+              position:'bottom',
+              labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }
+            }}
+          }
+        });
+      }
 
       // 共有文
       const shareText = buildShareText({
-        title: titleObj.t,
-        level,
-        finalType,
-        overallType: overall.type,
-        dominant
+        title: titleObj.t, level, finalType, overallType: overall.type, dominant
       });
 
       // セミナーURL（UTM付き）
       const utm = new URLSearchParams({
-        utm_source: 'kankakuquest',
-        utm_medium: 'result',
-        utm_campaign: 'seminar',
-        utm_content: finalType
+        utm_source: 'kankakuquest', utm_medium: 'result', utm_campaign: 'seminar', utm_content: finalType
       }).toString();
       const seminarUrl = `${SEMINAR_URL}?${utm}`;
       const seminarBtn = document.getElementById('seminarBtn');
@@ -570,39 +513,26 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-function getAxisLabel(key){
-  for (var i=0; i<AXES.length; i++){
-    if (AXES[i].key === key) return AXES[i].label;
-  }
-  return '';
-}
-    
-    /* ===== シェア文（イベント訴求つき短文） ===== */
-function buildShareText(arg){
-  var title = arg.title;
-  var level = arg.level;
-  var finalType = arg.finalType;
-  var overallType = arg.overallType;
-  var dominant = arg.dominant;
+    /* ===== 小関数 ===== */
+    function getAxisLabel(key){
+      for (let i=0;i<AXES.length;i++){
+        if (AXES[i].key === key) return AXES[i].label;
+      }
+      return '';
+    }
 
-  var hash = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
-  var head = '【診断結果】';
-  var lv   = 'Lv' + String(level).padStart(2,'0');
+    function buildShareText({title, level, finalType, overallType, dominant}){
+      const hash = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
+      const head = '【診断結果】';
+      const lv = 'Lv' + String(level).padStart(2,'0');
+      const axisLabel = getAxisLabel(dominant);
+      let tendency = '';
+      if (finalType === 'dual') tendency = '過敏と鈍麻の“両極端”タイプ！';
+      else if (finalType === 'balanced') tendency = '今回は偏り少なめのバランス型！';
+      else tendency = (axisLabel || '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
+      return `${head}\n称号「${title}」 ${lv}\n${tendency}\n${hash}`;
+    }
 
-  var axisLabel = getAxisLabel(dominant);
-  var tendency = '';
-  if (finalType === 'dual') {
-    tendency = '過敏と鈍麻の“両極端”タイプ！';
-  } else if (finalType === 'balanced') {
-    tendency = '今回は偏り少なめのバランス型！';
-  } else {
-    tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
-  }
-
-  return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + hash;
-}
-
-    /* ===== レベルバッジ ===== */
     function renderAxisLevelBadges(radar){
       return radar.map(d=>{
         const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
@@ -616,9 +546,8 @@ function buildShareText(arg){
       }).join('');
     }
 
-    /* ===== ロジック ===== */
-    function pickQuestions(){
-      const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
+    function pickQuestions(count){
+      const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}]));
       BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
       const picked = [];
       AXES.forEach(ax=>{
@@ -626,7 +555,7 @@ function buildShareText(arg){
         const Y = shuffle(byAxis[ax.key].hypo ).slice(0,2);
         picked.push(...H, ...Y);
       });
-      return shuffle(picked);
+      return shuffle(count ? picked.slice(0, count) : picked);
     }
 
     function shuffle(arr){
@@ -641,14 +570,13 @@ function buildShareText(arg){
     // p=0–100 → Lv=0–99（少し緩やか）
     const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
 
-    // スコア計算＋「dual軸」抽出
     function calcScores(questions, answers){
       const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
       questions.forEach(q=>{
         const v = answers[q.id];
         if(v==null) return;
-        var w = (v != null && Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, String(v))) ? LIKERT_WEIGHT[String(v)] : 0;
-
+        const key = String(v);
+        const w = Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, key) ? LIKERT_WEIGHT[key] : 0;
         if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
         else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
       });
@@ -667,13 +595,10 @@ function buildShareText(arg){
       const maxHyper = Math.max(...radar.map(d=>d.hyper));
       const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
-      // dual 判定に使う：過敏・鈍麻の両方が60以上の「軸」を列挙
       const dualAxes = radar.filter(d=> d.hyper>=DUAL_THRESHOLD && d.hypo>=DUAL_THRESHOLD).map(d=>d.axisKey);
 
-      // 暫定overall：平均差でハイポ/ハイパの方向だけ持っておく（最終タイプは結果画面で上書き）
       const overallType = (hyperAvg >= hypoAvg) ? 'hyper' : 'hypo';
 
-      // 支援値（レベル算出用）
       let dominantKey = radar[0].axisKey, best=-1;
       radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
@@ -705,7 +630,7 @@ function buildShareText(arg){
             <div class="cols" style="margin-top:8px">
               <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>${strong.map(x=>`<li>${x}</li>`).join('')}</ul></div>
               <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>${challenge.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-              <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+              <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join(' ')}</ul></div>
             </div>
           </div>`;
       }).join('');
@@ -739,7 +664,7 @@ function buildShareText(arg){
       movement: {
         hyper: { strong:['バランス変化に敏感'], challenge:['乗り物酔い/人混みがつらい'], tips:['混雑回避ルート','安定した姿勢/視点固定','乗り物は前方/風通し良い席'] },
         hypo:  { strong:['スリル/運動を楽しめる'], challenge:['危険察知が遅れがち'], tips:['安全ルールの事前確認','プロテクターの使用','段階的に刺激レベルを上げる'] }
-      },
+      }
     };
 
     function renderLowOverallCard(){
@@ -752,8 +677,7 @@ function buildShareText(arg){
             <li>疲れている日は、音や光など一つだけでもコントロールできると楽に</li>
             <li>「しんどさログ」をつけると自分の傾向が見つけやすい</li>
           </ul>
-        </div>
-      `;
+        </div>`;
     }
 
     /* ===== PNG保存 ===== */
@@ -779,14 +703,14 @@ function buildShareText(arg){
         g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
         g.fillText(`称号：${title}`, P, y); y += 52;
         g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        g.fillText(`レベル：Lv${String(level).padStart(2,'0')}`, P, y); y += 36 + 24;
+        g.fillText(`レベル：Lv${String(level).padStart(2,'0')}`, P, y); y += 60;
 
         const roleW = Math.min(W - P*2, 560);
         const roleH = Math.round(roleW * (roleImg.height/roleImg.width));
         g.drawImage(roleImg, P, y, roleW, roleH); y += roleH + 32;
 
         const chartW = Math.min(W - P*2, 720);
-        g.drawImage(chart, P, y, chartW, 540); y += 540 + 28;
+        g.drawImage(chart, P, y, chartW, 540); y += 568;
 
         g.fillStyle = '#64748b';
         g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
@@ -856,7 +780,6 @@ function buildShareText(arg){
       const diff = Math.max(0, Math.ceil((eventDate - today)/(1000*60*60*24)));
       left.textContent = diff;
 
-      // 24h抑止
       const muteUntil = +localStorage.getItem('sticky_mute_until') || 0;
       if (Date.now() < muteUntil) { el.hidden = true; return; }
 
@@ -868,23 +791,18 @@ function buildShareText(arg){
     }
     function hideSticky(){ const el = document.getElementById('stickyCta'); if(el) el.hidden = true; }
 
-  /* ===== ユーティリティ ===== */
-  function preload(srcs = []) {
-    srcs.forEach((s) => {
-      const i = new Image();
-      i.src = s;
-    });                 // ← forEach を閉じる
-  }                      // ← function preload を閉じる
+    /* ===== ユーティリティ ===== */
+    function preload(srcs=[]){ srcs.forEach(s => { const i = new Image(); i.src = s; }); }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const roleImgs = [
-      IMAGES.balanced, IMAGES.dual, IMAGES.title,
-      ...Object.values(IMAGES.rolesHyper),
-      ...Object.values(IMAGES.rolesHypo)
-    ].filter(Boolean);
-    preload(roleImgs);
-    renderStart();
-  });
-</script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const roleImgs = [
+        IMAGES.balanced, IMAGES.dual, IMAGES.title,
+        ...Object.values(IMAGES.rolesHyper),
+        ...Object.values(IMAGES.rolesHypo)
+      ].filter(Boolean);
+      preload(roleImgs);
+      renderStart();
+    });
+  </script>
 </body>
 </html>
