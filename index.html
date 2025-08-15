@@ -39,7 +39,7 @@
       .container{max-width:960px; margin:0 auto; padding:16px}
       header{position:sticky; top:0; background:#ffffffbb; backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid var(--ring)}
       header .bar{display:flex; align-items:center; justify-content:space-between; padding:10px 16px}
-      .brand{display:flex; gap:10px; align-items:center; cursor:pointer; text-decoration:none; color:inherit}
+      .brand{display:flex; gap:10px; align-items:center; cursor:default; text-decoration:none; color:inherit}
       .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--brand2);color:#fff;display:grid;place-items:center;font-weight:700}
       .button{border:1px solid var(--ring); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
       .button.primary{background:var(--brand); color:#fff; border-color:transparent}
@@ -68,28 +68,25 @@
       .likert .v3:hover{ filter:brightness(.97); }
       .likert .v4{ background:#facc15; }
       .likert .v4:hover{ filter:brightness(.97); }
-      /* リトライボタンの色 */
-      .retry-button {
-  background-color: #e53935;
-  color: white;
-  border: none;
-}
 
-.retry-button:hover {
-  background-color: #c62828;
-}
-      
+      /* リトライボタンの色（要望済） */
+      .retry-button { background-color:#e53935; color:#fff; border:none; }
+      .retry-button:hover { background-color:#c62828; }
+
       .cols{display:grid; gap:16px}
       @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
       .small{font-size:12px; color:#475569}
       .muted{color:#616b7c}
       .badge{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#eef2ff}
+      .badge.pr{ background:#fff1f2; color:#9f1239; border:1px solid #fecdd3; }
       .center{text-align:center}
       img.role{width:360px; height:auto; display:block; margin:8px auto 0; max-width:100%;}
       .level-display{font-size:20px; font-weight:700; margin-top:6px}
       .role-comment{margin-top:6px; color:#374151}
       footer{color:#6b7280; font-size:12px; padding:24px 16px}
-      .cta{background:#eff6ff; border:1px solid #bfdbfe}
+      .cta{background:#f8fafc; border:1px solid #e2e8f0}
+      .cta h3{ margin:0 0 6px; font-size:18px; }
+      .cta .subtle{ color:#475569; font-size:13px; }
       .start-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:12px}
       .share{display:grid; gap:10px; justify-items:center}
       .share .buttons{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
@@ -101,6 +98,7 @@
       .disclaimer{margin-top:10px; font-size:12px; color:#64748b; line-height:1.6}
       #homeLink{pointer-events:none; cursor:default}
       .radar-wrap{height:360px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; max-width:560px; width:100%;}
+
       @media(max-width:480px){
         .container{padding:12px}
         header .bar{padding:8px 12px}
@@ -122,7 +120,7 @@
         <a id="homeLink" class="brand" aria-label="KANKAKUクエスト">
           <div class="logo">Q</div><div style="font-weight:700">KANKAKUクエスト</div>
         </a>
-        <a id="seminarBtnTop" class="button primary" target="_blank" href="#">8/23 セミナーを見る</a>
+        <!-- 右上セミナーボタンは削除。診断結果内のカードでのみ訴求 -->
       </div>
     </header>
 
@@ -137,10 +135,10 @@
       /* ================= 設定 ================= */
       const SEMINAR_DATE = '2025-08-23';
       const SEMINAR_URL  = 'https://forms.gle/hWcV6LZDvR2S9wX88';
-      const QUESTION_COUNT = 28; // 各軸：過敏2＋鈍麻2（固定28問）
-      const DUAL_THRESHOLD = 70; // 両極端（dual）判定のしきい値（%）
+      const QUESTION_COUNT = 28;
+      const DUAL_THRESHOLD = 70;
 
-      // 画像パス（あなたの /images に一致）
+      // 画像パス
       const IMAGES = {
         title: 'images/title-image.png',
         rolesHyper: {
@@ -161,7 +159,7 @@
           tempPain:  'images/job-tempPain-hypo.png',
           movement:  'images/job-movement-hypo.png'
         },
-        balanced: 'images/job-nomal.png',  // バランス型（ファイル名は "nomal" でOK）
+        balanced: 'images/job-nomal.png',
         dual:     'images/job-dualblade.png'
       };
 
@@ -184,11 +182,10 @@
           tempPain: { t: '四季渡りのノマド（ノマド）', role: 'ノマド' },
           movement: { t: '竜騎のランサー（ドラグーン）', role: 'ドラグーン' },
         },
-        dual: { any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' } },
+        dual:   { any: { t: '感覚の双剣士（デュアルブレード）', role: 'デュアルブレード' } },
         normal: { any: { t: 'バランス型：ノーマライザー', role: 'ノーマライザー' } }
       };
 
-      /* ▼▼ SNS用：役職コメント（50字内トリム用に使用） ▼▼ */
       const ROLE_COMMENTS = {
         hyper: {
           hearing:  '小さな音も聞き逃さない探索の達人。静寂の守護者。',
@@ -224,50 +221,43 @@
 
       /* ================ 質問（最終版 28問） ================ */
       const BANK = [
-        // ── 聴覚 ──
+        // 聴覚
         { id:'h_h_1', axis:'hearing', trait:'hyper', adult:'店内やオフィスのざわめきで集中が途切れやすい' },
         { id:'h_h_2', axis:'hearing', trait:'hyper', adult:'突然の大きな音が苦手で、体が強く反応してしまう' },
         { id:'h_y_1', axis:'hearing', trait:'hypo',  adult:'雑音の中で呼ばれても気づきにくい' },
         { id:'h_y_2', axis:'hearing', trait:'hypo',  adult:'にぎやかな場所で小さな音に気づくのが遅れがち' },
-
-        // ── 視覚 ──
+        // 視覚
         { id:'v_h_1', axis:'vision', trait:'hyper', adult:'強い照明や画面の光がつらく、遮光したくなる' },
         { id:'v_h_2', axis:'vision', trait:'hyper', adult:'画面のちらつきや速い動きに疲れやすい' },
         { id:'v_y_1', axis:'vision', trait:'hypo',  adult:'部屋が暗くなったことに気が付きにくい' },
         { id:'v_y_2', axis:'vision', trait:'hypo',  adult:'画面や印刷の細かい違いに気づきにくい' },
-
-        // ── 触覚 ──
+        // 触覚
         { id:'t_h_1', axis:'touch', trait:'hyper', adult:'チクチクする服やタグが苦手' },
         { id:'t_h_2', axis:'touch', trait:'hyper', adult:'手や服のベタつきが気になる' },
         { id:'t_y_1', axis:'touch', trait:'hypo',  adult:'ぎゅっとした圧があると落ち着く' },
         { id:'t_y_2', axis:'touch', trait:'hypo',  adult:'軽い擦り傷にすぐ気づきにくい' },
-
-        // ── 嗅覚 ──
+        // 嗅覚
         { id:'s_h_1', axis:'smell', trait:'hyper', adult:'香水や柔軟剤のにおいが強く感じられて離れたくなる' },
         { id:'s_h_2', axis:'smell', trait:'hyper', adult:'料理のにおいが混ざる場所が苦手' },
         { id:'s_y_1', axis:'smell', trait:'hypo',  adult:'香りの強弱の差を感じ取りにくい' },
         { id:'s_y_2', axis:'smell', trait:'hypo',  adult:'食品の傷みのにおいに気づくのが遅れがち' },
-
-        // ── 味覚 ──
+        // 味覚
         { id:'ta_h_1', axis:'taste', trait:'hyper', adult:'繊細な味の違いがわかり、好みがはっきりしている' },
         { id:'ta_h_2', axis:'taste', trait:'hyper', adult:'食感や香りが合わないと食べづらい' },
         { id:'ta_y_1', axis:'taste', trait:'hypo',  adult:'濃い味やスパイスの強い料理を求める' },
         { id:'ta_y_2', axis:'taste', trait:'hypo',  adult:'新しい味の刺激を強く求める' },
-
-        // ── 温度/痛み ──
+        // 温度/痛み
         { id:'tp_h_1', axis:'tempPain', trait:'hyper', adult:'室温のわずかな変化が気になる' },
         { id:'tp_h_2', axis:'tempPain', trait:'hyper', adult:'小さな痛みでも集中が切れやすい' },
         { id:'tp_y_1', axis:'tempPain', trait:'hypo',  adult:'暑さ寒さに気づくのが遅れがち' },
         { id:'tp_y_2', axis:'tempPain', trait:'hypo',  adult:'軽いケガでも痛みをあまり感じない' },
-
-        // ── 動き ──
+        // 動き
         { id:'m_h_1', axis:'movement', trait:'hyper', adult:'人混みや揺れで酔いやすい' },
         { id:'m_h_2', axis:'movement', trait:'hyper', adult:'急な動きや加速が苦手' },
         { id:'m_y_1', axis:'movement', trait:'hypo',  adult:'スピードや回転の刺激を強く好む' },
         { id:'m_y_2', axis:'movement', trait:'hypo',  adult:'刺激を求めて走ったりジャンプしたくなる' }
       ];
 
-      /* === 140字向けショート要約（従来） === */
       const SHORT_SUMMARY = {
         hearing:  { hyper:'小さな音を拾いやすい／大きな音がつらい', hypo:'にぎやかでも集中しやすい／呼びかけを見落としがち' },
         vision:   { hyper:'細部に気づく／強い光やちらつきが苦手',       hypo:'暗所に強い／細かな変化は見落としやすい' },
@@ -289,7 +279,6 @@
         return location.origin + location.pathname.replace(/index\.html$/,'');
       }
 
-      // 傾向の見出し（ライト表現）
       function tendencyLabel(overall, dominant){
         if (overall==='balanced') return 'バランス型の傾向かも？';
         if (overall==='dual')     return '過敏と鈍麻、両方が高い“両極端”タイプかも？';
@@ -297,7 +286,6 @@
         return `${axis}${overall==='hyper'?'過敏':'鈍麻'}の傾向かも？`;
       }
 
-      // SNSコメント（役職コメントを短く整える：全角50字程度にトリム）
       function shortRoleComment(overall, dominant){
         if (overall==='balanced') return ROLE_COMMENTS.balanced;
         if (overall==='dual')     return ROLE_COMMENTS.dual;
@@ -306,10 +294,9 @@
         return raw.length <= limit ? raw : (raw.slice(0, limit-1) + '…');
       }
 
-      /* === 改行・空行入り：140字に極力収めるX用投稿文 === */
       function buildShortShareText({title, level, overall, dominant}){
         const url = baseURL();
-        const urlLen = 23; // XのURL換算長
+        const urlLen = 23;
         const nl = '\n';
         const lines = [
           '【感覚クエスト⚔️診断結果】',
@@ -323,25 +310,18 @@
           '#KANKAKUクエスト'
         ];
         let text = lines.join(nl);
-
-        // 140字に収める（URL23文字扱い）
         const effLen = t => t.length - (url.length - urlLen);
         const limit = 140;
         if (effLen(text) <= limit) return text;
         const mini4 = shortRoleComment(overall, dominant).split('。')[0] + '。';
-        const lines2 = [...lines];
-        lines2[4] = mini4;
-        text = lines2.join(nl);
+        const lines2 = [...lines]; lines2[4] = mini4; text = lines2.join(nl);
         if (effLen(text) <= limit) return text;
-        const lines3 = lines2.filter((l,i)=>!(i===1));
-        text = lines3.join(nl);
+        const lines3 = lines2.filter((l,i)=>!(i===1)); text = lines3.join(nl);
         if (effLen(text) <= limit) return text;
-        const lines4 = lines3.filter((l,i)=> i!==3);
-        text = lines4.join(nl);
+        const lines4 = lines3.filter((l,i)=> i!==3); text = lines4.join(nl);
         return text;
       }
 
-      /* === 5段階（0〜4）：0は「該当しない」 === */
       const LIKERT_WEIGHT = {0:0.00, 1:0.08, 2:0.28, 3:0.65, 4:1.00};
       const LIKERT = [
         { v:0, label:'あてはまらない' },
@@ -351,11 +331,9 @@
         { v:4, label:'とてもあてはまる' },
       ];
 
-      /* ================ 状態 ================ */
       let qs = []; let answers = {}; let index = 0;
       const app = document.getElementById('app');
 
-      /* ================ 画面 ================ */
       function renderStart(){
         app.innerHTML = `
           <div class="grid">
@@ -404,7 +382,6 @@
           </div>`;
         const wrap = document.getElementById('likert');
 
-        // アクセシビリティ対応：キーボードで選択
         LIKERT.forEach((o, idx)=>{
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -420,15 +397,12 @@
           btn.onkeydown = (e)=>{
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown'){
               e.preventDefault();
-              const next = btn.nextElementSibling || wrap.firstElementChild;
-              next.focus();
+              const next = btn.nextElementSibling || wrap.firstElementChild; next.focus();
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
               e.preventDefault();
-              const prev = btn.previousElementSibling || wrap.lastElementChild;
-              prev.focus();
+              const prev = btn.previousElementSibling || wrap.lastElementChild; prev.focus();
             } else if (e.key === ' ' || e.key === 'Enter'){
-              e.preventDefault();
-              selectAndNext(o.v);
+              e.preventDefault(); selectAndNext(o.v);
             }
           };
           wrap.appendChild(btn);
@@ -438,16 +412,14 @@
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-      // 選択→即次へ
       function selectAndNext(value){
         const q = qs[index];
-        answers[q.id] = value; // 0〜4
+        answers[q.id] = value;
         const total = qs.length;
         if(index+1 < total){ index++; renderQuestion(); }
         else { renderResult(); }
       }
 
-      /* ================ 結果 ================ */
       function renderResult(){
         const s = calcScores(qs, answers);
         const { radar, hyperAvg, hypoAvg, overall, dominant, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual } = s;
@@ -530,29 +502,30 @@
               <div style="margin-top:8px; text-align:center"><button id="retryBtn" class="button retry-button">もう一度調べる</button></div>
             </div>
 
-            <div class="card cta">
+            <!-- ▼ 診断後だけ出す控えめな告知（PR） ▼ -->
+            <div class="card cta" aria-label="関連イベントのお知らせ">
               <div style="display:grid; gap:16px; grid-template-columns:1fr; align-items:start">
+                <div class="subtle"><span class="badge pr">PR</span> 関連イベント</div>
                 <img class="seminar-banner" src="images/0823seminar.png" alt="オンラインセミナー 8/23 バナー">
                 <div>
-                  <h3 style="color:#1e3a8a;">保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
-                  <p>KANKAKUクエストの結果、あなた（/お子さん）は <strong>「称号：${titleObj.t}」</strong>（Lv${String(level).padStart(2,'0')}）。その特徴に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
+                  <h3>保護者向け｜感覚過敏の子・不登校の子を支える具体策（${SEMINAR_DATE} オンライン）</h3>
+                  <p class="subtle">診断の結果（<strong>称号：${titleObj.t}</strong> / Lv${String(level).padStart(2,'0')}）に合わせて、日常の「しんどい」を軽くするヒントを保護者目線でお伝えします。</p>
                   <ul>
-                    <li>感覚過敏が学校生活に与える影響と見立て方（音・光・衣服・におい・食事・温度/痛み・動き）</li>
-                    <li>家で今日からできる環境調整と声かけ（朝の準備、通学/在宅の工夫）</li>
-                    <li>学校・支援先への伝え方（合理的配慮のお願い文例、先生への共有ポイント）</li>
-                    <li>不登校期の過ごし方と、復帰／進路選択に向けたステップ</li>
+                    <li>音・光・衣服・におい・食事・温度/痛み・動きの見立て方</li>
+                    <li>家で今日からできる環境調整と声かけ</li>
+                    <li>学校・支援先への伝え方（合理的配慮のお願い文例）</li>
+                    <li>不登校期の過ごし方と、復帰／進路選択のステップ</li>
                   </ul>
-                  <p><strong>特別講師：加藤 路瑛（感覚過敏研究所 所長）</strong><br>
-                     <strong>共催・進行：まなクロ にっしー（元教員／不登校支援者）</strong></p>
                   <div style="margin-top:10px">
-                    <a class="button primary" target="_blank" href="${SEMINAR_URL}">申し込みページ（Googleフォーム）</a>
+                    <a class="button" target="_blank" href="${SEMINAR_URL}" aria-label="セミナー申し込みページ（外部リンク）">申し込みページ（Googleフォーム）</a>
                   </div>
                 </div>
               </div>
             </div>
+            <!-- ▲ ここまで告知 -->
           </div>`;
 
-        // レーダーチャート（CDN失敗時フォールバック込み）
+        // レーダーチャート
         const ctx = document.getElementById('radar');
         if (window.Chart && ctx) {
           new Chart(ctx, {
@@ -564,7 +537,14 @@
                 { label:'鈍麻', data: radar.map(d=>d.hypo),  fill:true, borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.25)' },
               ]
             },
-            options: { responsive:true, maintainAspectRatio:false, scales:{ r:{ suggestedMin:0, suggestedMax:100, pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } }, ticks:{ display:false } } }, plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12, font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } } }
+            options: {
+              responsive:true, maintainAspectRatio:false,
+              scales:{ r:{ suggestedMin:0, suggestedMax:100,
+                pointLabels:{ font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } },
+                ticks:{ display:false } } },
+              plugins:{ legend:{position:'bottom', labels:{ boxWidth:12, boxHeight:12,
+                font:{ size:(window.matchMedia('(max-width:480px)').matches ? 12 : 13) } } } }
+            }
           });
         } else if (ctx) {
           const fallback = document.createElement('div');
@@ -601,11 +581,10 @@
         window.scrollTo({top:0, behavior:'smooth'});
       }
 
-      /* ================ 各特性Lvバッジ ================ */
       function renderAxisLevelBadges(radar){
         return radar.map(d=>{
           const mode = d.hyper>d.hypo ? '過敏' : (d.hypo>d.hyper ? '鈍麻' : '同程度');
-          const lv = pctToLv(Math.max(d.hyper, d.hypo)); // 0–99
+        const lv = pctToLv(Math.max(d.hyper, d.hypo));
           return `
             <div class="level-item">
               <div><strong>${d.axis}</strong><span class="chip">${mode}</span></div>
@@ -615,7 +594,6 @@
         }).join('');
       }
 
-      /* ================ ロジック ================ */
       function pickQuestions(){
         const byAxis = Object.fromEntries(AXES.map(a=>[a.key,{hyper:[],hypo:[]}])); 
         BANK.forEach(q => byAxis[q.axis][q.trait].push(q));
@@ -628,7 +606,6 @@
         return shuffle(picked);
       }
 
-      // フィッシャー–イェーツシャッフル
       function shuffle(arr){
         const a = arr.slice();
         for(let i=a.length-1;i>0;i--){
@@ -638,10 +615,8 @@
         return a;
       }
 
-      // p=0–100 → Lv=0–99（少し緩やか）
       const pctToLv = p => Math.min(99, Math.max(0, Math.floor(Math.pow(p/100, 1.15) * 99)));
 
-      // スコア計算（非線形ウェイト）＋ 両極端（dual）判定
       function calcScores(questions, answers){
         const sums = Object.fromEntries(AXES.map(a=>[a.key,{h:0,y:0,hc:0,yc:0}]));
         questions.forEach(q=>{
@@ -666,10 +641,7 @@
         const maxHyper = Math.max(...radar.map(d=>d.hyper));
         const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
-        const EPS = 6;
-        const LOW = 25;
-        const MID = 55;
-        const DOM_GAP = 8;
+        const EPS = 6, LOW = 25, MID = 55, DOM_GAP = 8;
 
         let overall;
         if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
@@ -702,30 +674,6 @@
         const lvDual     = pctToLv(Math.min(maxHyper, maxHypo));
 
         return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual };
-      }
-
-      function renderAxisFeedback(radar){
-        const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
-        const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
-                            .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
-        const list = (picks.length? picks: scored.sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo)).slice(0,3));
-        return list.map(s=>{
-          const mode = s.hyper> s.hypo ? 'hyper' : (s.hypo> s.hyper? 'hypo':'mix');
-          const book = COMMENT_BOOK[s.key];
-          const strong = mode==='mix'? [...book.hyper.strong,...book.hypo.strong].slice(0,2) : book[mode].strong;
-          const challenge = mode==='mix'? [...book.hyper.challenge,...book.hypo.challenge].slice(0,2) : book[mode].challenge;
-          const tips = mode==='mix'? [...book.hyper.tips,...book.hypo.tips].slice(0,3) : book[mode].tips;
-          return `
-            <div class="card">
-              <h3>${s.label}</h3>
-              <div class="small muted">過敏:${s.hyper}% / 鈍麻:${s.hypo}%</div>
-              <div class="cols" style="margin-top:8px">
-                <div><div style="font-weight:600; margin-bottom:6px">得意なこと（強み）</div><ul>${strong.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-                <div><div style="font-weight:600; margin-bottom:6px">苦手になりやすいこと</div><ul>${challenge.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-                <div><div style="font-weight:600; margin-bottom:6px">対処法のヒント</div><ul>${tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-              </div>
-            </div>`;
-        }).join('');
       }
 
       const COMMENT_BOOK = {
@@ -773,29 +721,6 @@
         `;
       }
 
-      /* ================ 便利関数（ボタン文言など） ================ */
-      function formatJPDate(iso){
-        const d = new Date(iso + 'T00:00:00');
-        const w = ['日','月','火','水','木','金','土'][d.getDay()];
-        return `${d.getMonth()+1}/${d.getDate()}(${w})`;
-      }
-      function updateSeminarButton(){
-        const btn = document.getElementById('seminarBtnTop');
-        if(!btn) return;
-        const today = new Date();
-        const eventDate = new Date(SEMINAR_DATE + 'T23:59:59');
-        if (today <= eventDate) {
-          btn.textContent = `${formatJPDate(SEMINAR_DATE)} セミナーを見る`;
-          btn.href = SEMINAR_URL;
-        } else {
-          btn.textContent = 'アーカイブを見る';
-          btn.href = SEMINAR_URL; // 適宜変更
-        }
-      }
-      function preload(srcs=[]){
-        srcs.forEach(s => { const i = new Image(); i.src = s; });
-      }
-
       // PNG保存ユーティリティ
       async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
         try{
@@ -834,7 +759,6 @@
 
           const dataUrl = out.toDataURL('image/png');
 
-          // 共有APIが使えれば優先
           try{
             const file = await dataUrlToFile(dataUrl, 'kankaku-result.png');
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -854,6 +778,7 @@
           alert('画像の保存に失敗しました。ページを再読み込みして再試行してください。');
         }
       }
+
       function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
         const chars = text.split('');
         let line = '';
@@ -869,12 +794,12 @@
         }
         ctx.fillText(line, x, y);
       }
+
       function loadImage(src) {
         return new Promise((res, rej) => {
           const img = new Image();
           img.onload = () => res(img);
           img.onerror = rej;
-          // 同一オリジン配信なので crossOrigin は不要
           img.src = src;
         });
       }
@@ -884,20 +809,23 @@
         return new File([blob], filename, { type: 'image/png' });
       }
 
-      /* ================ 初期化（ロゴはタップ無効のまま） ================ */
+      // ユーティリティ（今はヘッダーボタンを使わないため未使用でもOK）
+      function formatJPDate(iso){
+        const d = new Date(iso + 'T00:00:00');
+        const w = ['日','月','火','水','木','金','土'][d.getDay()];
+        return `${d.getMonth()+1}/${d.getDate()}(${w})`;
+      }
+      function preload(srcs=[]){
+        srcs.forEach(s => { const i = new Image(); i.src = s; });
+      }
+
       window.addEventListener('DOMContentLoaded', () => {
-        const btnTop = document.getElementById('seminarBtnTop');
-        if (btnTop) btnTop.href = SEMINAR_URL;
-
-        updateSeminarButton();
-
         const roleImgs = [
           IMAGES.balanced, IMAGES.dual, IMAGES.title,
           ...Object.values(IMAGES.rolesHyper),
           ...Object.values(IMAGES.rolesHypo)
         ].filter(Boolean);
         preload(roleImgs);
-
         renderStart();
       });
     </script>
