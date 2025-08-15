@@ -641,7 +641,9 @@ function buildShareText({title, level, finalType, overallType, dominant}){
       questions.forEach(q=>{
         const v = answers[q.id];
         if(v==null) return;
-        const w = LIKERT_WEIGHT[v] ?? 0;
+        var w = (v != null && Object.prototype.hasOwnProperty.call(LIKERT_WEIGHT, v))
+  ? LIKERT_WEIGHT[v]
+  : 0;
         if(q.trait==='hyper'){sums[q.axis].h += w; sums[q.axis].hc++;}
         else                 {sums[q.axis].y += w; sums[q.axis].yc++;}
       });
