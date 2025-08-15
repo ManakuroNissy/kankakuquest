@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>KANKAKUクエスト — あなたの感覚ジョブ診断</title>
     <!-- Chart.js（レーダーチャート用） -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -79,7 +79,7 @@
         .role-comment{font-size:14px; line-height:1.6}
         .level-grid{grid-template-columns:1fr}
         .share .buttons .button{width:100%}
-        .radar-wrap{height:320px; max-width:100%;}
+        .radar-wrap{height:300px; max-width:100%;}
       }
     #homeLink{pointer-events:none; cursor:default}
     </style>
@@ -638,7 +638,7 @@
         return { radar, hyperAvg, hypoAvg, overall, dominant: dominantKey, maxAny, lvDominant, lvBalanced, maxHyper, maxHypo, lvDual };
       }
 
-      function renderAxisFeedback(radar){
+      function renderAxisFeedback(radar){(radar){
         const scored = radar.map(d=>({ key:d.axisKey, label:d.axis, hyper:d.hyper, hypo:d.hypo }));
         const picks = scored.filter(s=>Math.max(s.hyper,s.hypo)>=60)
                             .sort((a,b)=>Math.max(b.hyper,b.hypo)-Math.max(a.hyper,a.hypo));
