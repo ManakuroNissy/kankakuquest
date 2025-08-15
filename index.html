@@ -897,19 +897,24 @@ async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar'
 
     let y = P;
 
-    // 見出し
-    g.fillStyle = '#0f172a';
-    g.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-    y = drawWrap(g, 'KANKAKUクエスト 診断結果', P, y, COL, 56) + (GAP/4);
+// 見出し
+g.fillStyle = '#0f172a';
+g.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+g.textAlign = 'center';
+g.fillText('KANKAKUクエスト 診断結果', W/2, y);
+y += 56 + (GAP/4);
 
-    // 称号
-    g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-    y = drawWrap(g, `称号：${title}`, P, y, COL, 50);
+// 称号
+g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+g.fillText(`称号：${title}`, W/2, y);
+y += 50;
 
-    // レベル
-    g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-    y = drawWrap(g, `レベル：Lv${String(level).padStart(2,'0')}`, P, y, COL, 44);
-    y += GAP;
+// レベル
+g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+g.fillText(`レベル：Lv${String(level).padStart(2,'0')}`, W/2, y);
+y += GAP;
+
+g.textAlign = 'left';
 
     // === ここから追加：キャッチコピー（中央寄せの角丸バッジ） ===
 const catchCopy = getCatchCopy(title);
