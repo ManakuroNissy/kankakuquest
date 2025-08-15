@@ -408,6 +408,8 @@
         }
 
         let headNote = '';
+        const diffAbs = Math.abs(hyperAvg - hypoAvg);
+        const adjective = diffAbs >= 31 ? '非常に高め' : (diffAbs >= 16 ? '高め' : 'やや高め');
         if (overall === 'balanced' && maxAny <= 25) {
           headNote = '今回は大きな偏りは見つかりませんでした。状況や体調によって感じ方がゆるやかに変わる、柔軟タイプかもしれません。';
         } else if (overall === 'balanced') {
@@ -415,7 +417,7 @@
         } else if (overall === 'dual') {
           headNote = '過敏と鈍麻の両方が高く出ました。場面に応じて反応が切り替わるタイプかもしれません。使い分けの工夫が鍵です。';
         } else {
-          headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向がやや高めでした。`;
+          headNote = `いちばん強く特徴が出たのは「${axisLabel}」。全体としては<strong>${overall==='hyper'?'過敏':'鈍麻'}</strong>の傾向が${adjective}でした。`;
         }
 
         // 役職コメント（結果ページ表示用）
@@ -583,7 +585,21 @@
         const EPS = 6;   // 平均差のしきい値（%）
         const LOW = 25;  // 低強度のしきい値（これ以下ならバランス型）
         const MID = 55;  // 中強度のしきい値（これ以上が一つでもあれば原則バランスにしない）
-        const DOM_GAP = 8; // 代表軸
+        const DOM_GAP = 8; // 代表軸の過敏vs鈍麻の差がこれ以上なら優勢側に倒す
+
+        // 全体判定
+        let overall;
+        if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
+          overall = 'dual';
+        } else if (maxAny <= LOW) {
+          overall = 'balanced';
+        } else if (Math.abs(hyperAvg - hypoAvg) <= EPS && maxAny < MID) {
+          overall = 'balanced';
+        } else {
+          overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
+        }
+
+        // 代表軸（最も強い軸）
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
@@ -599,9 +615,9 @@
           }
         }
 
-        // Lv
+        // レベル算出
         const dom = radar.find(r=>r.axisKey===dominantKey);
-        const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo)) = pctToLv(Math.max(dom.hyper, dom.hypo));
+        const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
         const lvDual     = pctToLv(Math.min(maxHyper, maxHypo)); // 両方の強さの下限をレベル化
 
