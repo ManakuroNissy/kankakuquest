@@ -764,78 +764,140 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
         </div>`;
     }
 
-    /* ===== PNG保存 ===== */
-    async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
-      try{
-        const roleImg = await loadImage(roleImgSrc);
-        const chart = document.getElementById(chartCanvasId);
-        if (!chart) { alert('チャートが見つかりませんでした'); return; }
-
-        const W = 1080, P = 48;
-        const out = document.createElement('canvas');
-        out.width = W;
-        out.height = 1600;
-        const g = out.getContext('2d');
-
-        g.fillStyle = '#ffffff'; g.fillRect(0,0,out.width,out.height);
-        let y = P;
-
-        g.fillStyle = '#0f172a';
-        g.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        g.fillText('KANKAKUクエスト 診断結果', P, y); y += 64;
-
-        g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        g.fillText(`称号：${title}`, P, y); y += 52;
-        g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        g.fillText(`レベル：Lv${String(level).padStart(2,'0')}`, P, y); y += 60;
-
-        const roleW = Math.min(W - P*2, 560);
-        const roleH = Math.round(roleW * (roleImg.height/roleImg.width));
-        g.drawImage(roleImg, P, y, roleW, roleH); y += roleH + 32;
-
-        const chartW = Math.min(W - P*2, 720);
-        g.drawImage(chart, P, y, chartW, 540); y += 568;
-
-        g.fillStyle = '#64748b';
-        g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
-        wrapText(g, '※ この結果は自己回答に基づく簡易チェックです。医学的な診断を提供するものではありません。', P, y, W - P*2, 30);
-
-        const dataUrl = out.toDataURL('image/png');
-
-        try{
-          const file = await dataUrlToFile(dataUrl, 'kankaku-result.png');
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'KANKAKUクエスト結果' });
-            return;
-          }
-        }catch(_){}
-
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = 'kankaku-result.png';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }catch(e){
-        console.error(e);
-        alert('画像の保存に失敗しました。ページを再読み込みして再試行してください。');
-      }
+// ===== ヘルパー（この2つをファイル内どこかに追加。重複があれば置き換え）=====
+function measureWrap(ctx, text, maxWidth){
+  const words = [...text]; // 全角対応の1文字ずつ
+  const lines = [];
+  let line = '';
+  for(const ch of words){
+    const test = line + ch;
+    if(ctx.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = ch;
+    }else{
+      line = test;
     }
-    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-      const chars = text.split('');
-      let line = '';
-      for (let i=0;i<chars.length;i++){
-        const test = line + chars[i];
-        if (ctx.measureText(test).width > maxWidth && i>0){
-          ctx.fillText(line, x, y);
-          line = chars[i];
-          y += lineHeight;
-        } else {
-          line = test;
-        }
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+function drawWrap(ctx, text, x, y, maxWidth, lineHeight){
+  const lines = measureWrap(ctx, text, maxWidth);
+  for(const ln of lines){ ctx.fillText(ln, x, y); y += lineHeight; }
+  return y;
+}
+
+// ===== ここを差し替え =====
+async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
+  try{
+    const roleImg = await loadImage(roleImgSrc);
+    const chart = document.getElementById(chartCanvasId);
+    if (!chart) { alert('チャートが見つかりませんでした'); return; }
+
+    // レイアウト基準
+    const W = 1080;               // 出力幅
+    const P = 48;                 // 外側パディング
+    const GAP = 28;               // ブロック間の基本余白
+    const COL = W - P*2;          // コンテナ幅
+
+    // フォント（先に計測用に設定）
+    const tmp = document.createElement('canvas').getContext('2d');
+    tmp.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    const titleLines = measureWrap(tmp, 'KANKAKUクエスト 診断結果', COL);
+
+    tmp.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    const titleLine2 = measureWrap(tmp, `称号：${title}`, COL);
+
+    tmp.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    const titleLine3 = measureWrap(tmp, `レベル：Lv${String(level).padStart(2,'0')}`, COL);
+
+    // 画像サイズを自動スケール
+    const roleW = Math.min(COL, 560);
+    const roleH = Math.round(roleW * (roleImg.height / roleImg.width));
+
+    // レーダーはアスペクト固定で縮小（チャート実サイズを取得して比率で）
+    const chartAspect = chart.height > 0 ? (chart.width / chart.height) : (4/3);
+    const chartW = Math.min(COL, 720);
+    const chartH = Math.round(chartW / chartAspect);
+
+    // 備考テキストの行数見積り
+    tmp.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    const disclaimer = '※ この結果は自己回答に基づく簡易チェックです。医学的な診断を提供するものではありません。';
+    const discLines = measureWrap(tmp, disclaimer, COL);
+
+    // キャンバス高さを計算（行高はおおむねフォントサイズ+余白）
+    const hTitle1 = titleLines.length * 56;
+    const hTitle2 = titleLine2.length * 50;
+    const hTitle3 = titleLine3.length * 44;
+    const hDisc   = discLines.length * 34;
+
+    const H = P + hTitle1 + GAP/2 + hTitle2 + GAP/3 + hTitle3 + GAP +
+              roleH + GAP + chartH + GAP + hDisc + P;
+
+    // 本番キャンバス
+    const out = document.createElement('canvas');
+    out.width = W;
+    out.height = H;
+    const g = out.getContext('2d');
+
+    // 背景
+    g.fillStyle = '#ffffff';
+    g.fillRect(0,0,out.width,out.height);
+
+    let y = P;
+
+    // 見出し
+    g.fillStyle = '#0f172a';
+    g.font = 'bold 48px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    y = drawWrap(g, 'KANKAKUクエスト 診断結果', P, y, COL, 56) + (GAP/4);
+
+    // 称号
+    g.font = 'bold 40px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    y = drawWrap(g, `称号：${title}`, P, y, COL, 50);
+
+    // レベル
+    g.font = '600 36px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    y = drawWrap(g, `レベル：Lv${String(level).padStart(2,'0')}`, P, y, COL, 44);
+    y += GAP;
+
+    // 役職イラスト（左寄せ／コンテナ内）
+    g.drawImage(roleImg, P, y, roleW, roleH);
+    y += roleH + GAP;
+
+    // チャート（Chart.jsの<canvas>をそのまま描画）
+    // まだ描画中の可能性に備えて1フレーム待つ
+    await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
+    g.drawImage(chart, P, y, chartW, chartH);
+    y += chartH + GAP;
+
+    // 免責
+    g.fillStyle = '#64748b';
+    g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    drawWrap(g, disclaimer, P, y, COL, 34);
+
+    // ダウンロード or 共有
+    const dataUrl = out.toDataURL('image/png');
+    try{
+      const file = await dataUrlToFile(dataUrl, 'kankaku-result.png');
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'KANKAKUクエスト結果' });
+        return;
       }
-      ctx.fillText(line, x, y);
-    }
+    }catch(_){}
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'kankaku-result.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  }catch(e){
+    console.error(e);
+    alert('画像の保存に失敗しました。ページを再読み込みして再試行してください。');
+  }
+}
+    
     function loadImage(src) {
       return new Promise((res, rej) => {
         const img = new Image();
