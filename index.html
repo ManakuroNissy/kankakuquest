@@ -581,25 +581,27 @@
         const maxHypo  = Math.max(...radar.map(d=>d.hypo));
 
         const EPS = 6;   // 平均差のしきい値（%）
-        const LOW = 25;  // 低強度のしきい値
-        let overall;
-
-        // ★ 先に両極端（dual）を判定
-        if (maxHyper >= DUAL_THRESHOLD && maxHypo >= DUAL_THRESHOLD) {
-          overall = 'dual';
-        } else if (maxAny <= LOW || Math.abs(hyperAvg - hypoAvg) <= EPS) {
-          overall = 'balanced';
-        } else {
-          overall = (hyperAvg > hypoAvg) ? 'hyper' : 'hypo';
-        }
-
-        // 代表軸
+        const LOW = 25;  // 低強度のしきい値（これ以下ならバランス型）
+        const MID = 55;  // 中強度のしきい値（これ以上が一つでもあれば原則バランスにしない）
+        const DOM_GAP = 8; // 代表軸
         let dominantKey = radar[0].axisKey, best=-1;
         radar.forEach(d=>{ const m=Math.max(d.hyper,d.hypo); if(m>best){best=m; dominantKey=d.axisKey;} });
 
+        // 平均でバランス判定になったが代表軸の差が大きい場合は優勢側に倒す
+        if (overall === 'balanced') {
+          const domProbe = radar.find(r=>r.axisKey===dominantKey);
+          if (domProbe) {
+            const gap = Math.abs(domProbe.hyper - domProbe.hypo);
+            const domMax = Math.max(domProbe.hyper, domProbe.hypo);
+            if (gap >= DOM_GAP && domMax >= 45) {
+              overall = (domProbe.hyper > domProbe.hypo) ? 'hyper' : 'hypo';
+            }
+          }
+        }
+
         // Lv
         const dom = radar.find(r=>r.axisKey===dominantKey);
-        const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo));
+        const lvDominant = pctToLv(Math.max(dom.hyper, dom.hypo)) = pctToLv(Math.max(dom.hyper, dom.hypo));
         const lvBalanced = pctToLv(100 - maxAny);
         const lvDual     = pctToLv(Math.min(maxHyper, maxHypo)); // 両方の強さの下限をレベル化
 
