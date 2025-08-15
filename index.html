@@ -516,10 +516,18 @@ const FUN_LINES = {
       if (seminarBtn) seminarBtn.href = seminarUrl;
 
       // シェア導線
-      document.getElementById('shareX').onclick = ()=>{
-        const t = encodeURIComponent(shareText);
-        window.open(`https://x.com/intent/tweet?text=${t}`,'_blank');
-      };
+document.getElementById('shareX').onclick = ()=>{
+  // 共有テキスト（ハッシュタグは含めない想定）
+  const t = encodeURIComponent(shareText);
+
+  // 共有URL（あなたのページ）— OGPが出ます
+  const u = encodeURIComponent(baseURL());
+
+  // ハッシュタグはパラメータで渡すと字数節約＆見た目が綺麗
+  const hashtags = encodeURIComponent('KANKAKUクエスト,感覚ジョブ診断,イベント告知');
+
+  window.open(`https://x.com/intent/tweet?text=${t}&url=${u}&hashtags=${hashtags}`, '_blank');
+};
       document.getElementById('shareFB').onclick = ()=>{
         const u = encodeURIComponent(baseURL());
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`,'_blank');
@@ -574,7 +582,7 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
     } else {
       tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
     }
-    return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency + '\n' + SHARE_HASH;
+    return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency;
   }
 
   const head = '【感覚クエスト⚔️診断結果】';
