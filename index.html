@@ -613,14 +613,24 @@ document.getElementById('shareX').onclick = ()=>{
         }catch(e){ alert('コピーに失敗しました…'); }
       };
 
-      // PNG保存
-      const saveBtn = document.getElementById('savePngBtn');
-      if (saveBtn) {
-        saveBtn.onclick = () => saveResultPng({
-          title: titleObj.t, level, roleImgSrc: roleImg, chartCanvasId: 'radar'
-        });
-      }
-
++ // PNG保存（TOP3も画像に入れる）
+  const saveBtn = document.getElementById('savePngBtn');
+  if (saveBtn) {
++   const top3 = s.radar
++     .map(chooseJobForAxis)
++     .sort((a,b)=> b.score - a.score)
++     .slice(0,3);
+    saveBtn.onclick = () => saveResultPng({
+-     title: titleObj.t, level, roleImgSrc: roleImg, chartCanvasId: 'radar'
++     title: titleObj.t,
++     level,
++     roleImgSrc: roleImg,
++     chartCanvasId: 'radar',
++     top3,                      // ★追加
++     pageUrl: baseURL(),        // ★フッタ用
++     hashtags: 'KANKAKUクエスト / 感覚ジョブ診断', // ★任意
+    });
+  }
       document.getElementById('retryBtn').onclick = () => { qs=[]; answers={}; index=0; renderStart(); };
 
       // スティッキー告知バー
@@ -995,7 +1005,7 @@ function fitTextSize(ctx, text, maxWidth, base=32, min=18, step=2, fontFamily='s
 
     
 // ===== ここを差し替え =====
-async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar' }) {
+async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar', top3 = [], pageUrl = '', hashtags = '' }){
   try{
     const roleImg = await loadImage(roleImgSrc);
     const chart = document.getElementById(chartCanvasId);
@@ -1032,14 +1042,27 @@ async function saveResultPng({ title, level, roleImgSrc, chartCanvasId = 'radar'
     const disclaimer = '※ この結果は自己回答に基づく簡易チェックです。医学的な診断を提供するものではありません。';
     const discLines = measureWrap(tmp, disclaimer, COL);
 
+     // TOP3（小サムネ行）高さ見積り
+ const hasTop3 = Array.isArray(top3) && top3.length > 0;
+ const thumbW = 140, thumbH = 140; // 画像を縮小表示
+ const top3RowH = hasTop3 ? (thumbH + 68) : 0; // 画像＋キャプション分のだいたい
+
+ // フッタ（URL / ハッシュタグ / バージョン）
+ const FOOTER_H = 56;
+ const versionText = (typeof APP_VERSION!=='undefined')
+   ? `v${APP_VERSION}`
+   : '';
+    
+
     // キャンバス高さを計算（行高はおおむねフォントサイズ+余白）
     const hTitle1 = titleLines.length * 56;
     const hTitle2 = titleLine2.length * 50;
     const hTitle3 = titleLine3.length * 44;
     const hDisc   = discLines.length * 34;
 
-    const H = P + hTitle1 + GAP/2 + hTitle2 + GAP/3 + hTitle3 + GAP +
-              roleH + GAP + chartH + GAP + hDisc + P;
+ const H = P + hTitle1 + GAP/2 + hTitle2 + GAP/3 + hTitle3 + GAP +
+           roleH + GAP + (hasTop3 ? (top3RowH + GAP) : 0) +
+           chartH + GAP + hDisc + GAP + FOOTER_H + P;
 
     // 本番キャンバス
     const out = document.createElement('canvas');
@@ -1101,16 +1124,84 @@ y += pillH + 24; // 次の要素との間隔
 g.drawImage(roleImg, P + (COL - roleW) / 2, y, roleW, roleH);
 y += roleH + GAP;
 
+    
+
 // チャート（中央寄せ）
 await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 g.drawImage(chart, P + (COL - chartW) / 2, y, chartW, chartH);
 y += chartH + GAP;
 
-
+ // === TOP3（小カード3つ） ===
+ if (hasTop3){
+   // 画像を先に読み込み
+   const imgs = await Promise.all(top3.map(j => j.img ? loadImage(j.img) : Promise.resolve(null)));
+   const colGap = 18;
+   const totalW = thumbW*3 + colGap*2;
+   let x = Math.round((W - totalW)/2);
+   // タイトル行
+   g.fillStyle = '#0f172a';
+   g.font = '700 28px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+   g.textAlign = 'center';
+   g.fillText('上位ジョブ TOP3', W/2, y+28);
+   g.textAlign = 'left';
+   y += 36;
+   // 各カード
+   for(let i=0;i<top3.length;i++){
+     const j = top3[i];
+     const img = imgs[i];
+     // カード枠
+    const cardW = thumbW, cardH = thumbH + 60;
+     drawRoundedRect(g, x, y, cardW, cardH, 12, i===0 ? '#fffbeb' : i===1 ? '#f1f5f9' : '#faf5ff');
+     g.strokeStyle = i===0 ? '#f59e0b' : i===1 ? '#94a3b8' : '#c084fc';
+     g.lineWidth = 1;
+     g.strokeRect(x+0.5, y+0.5, cardW-1, cardH-1);
+     // 画像
+     if (img){
+       const ratio = Math.min(thumbW / img.width, thumbH / img.height);
+       const iw = Math.round(img.width * ratio);
+       const ih = Math.round(img.height * ratio);
+       const ix = x + Math.round((thumbW - iw)/2);
+       const iy = y + 8 + Math.round((thumbH - ih)/2);
+       g.drawImage(img, ix, iy, iw, ih);
+     }
+     // キャプション
+     g.fillStyle = '#0f172a';
+     g.font = '700 16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+     g.textAlign = 'center';
+     g.fillText(j.role, x + thumbW/2, y + thumbH + 24);
+     g.font = '600 14px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+     g.fillText(`Lv${String(j.level).padStart(2,'0')}・${j.axisLabel}・${j.mode==='hyper'?'過敏':'鈍麻'}`, x + thumbW/2, y + thumbH + 44);
+     g.textAlign = 'left';
+     x += thumbW + colGap;
+   }
+   y += top3RowH + GAP;
+ }
     // 免責
     g.fillStyle = '#64748b';
     g.font = '24px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
     drawWrap(g, disclaimer, P, y, COL, 34);
+
+    + y += GAP;
+
+ // フッタ（左：URL、中：ハッシュタグ、右：バージョン）
+ g.font = '16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial';
+ g.fillStyle = '#475569';
+ // 左
+ if (pageUrl){
+   g.textAlign = 'left';
+   g.fillText(pageUrl, P, y + 22);
+ }
+ // 中
+ if (hashtags){
+   g.textAlign = 'center';
+   g.fillText(hashtags, W/2, y + 22);
+ }
+ // 右
+ if (versionText){
+   g.textAlign = 'right';
+   g.fillText(versionText, W - P, y + 22);
+ }
+ g.textAlign = 'left';
 
     // ダウンロード or 共有
     const dataUrl = out.toDataURL('image/png');
@@ -1229,7 +1320,7 @@ function renderTopJobs(radar){
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.23";
+  const APP_VERSION = "1.24";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
