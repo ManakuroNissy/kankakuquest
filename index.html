@@ -82,23 +82,11 @@
     .sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; background:#0f172a; color:#fff; border-top:1px solid #1f2937; }
     .sticky-cta .row{display:flex; gap:12px; align-items:center; justify-content:center; padding:10px 12px; flex-wrap:wrap}
     .sticky-cta .close{position:absolute; right:12px; top:8px; background:transparent; color:#cbd5e1; border:none; font-size:18px; cursor:pointer}
-    @media(max-width:480px){
-      .container{padding:12px}
-      header .bar{padding:8px 12px}
-      .hero img{width:100%; max-width:none}
-      h1,h2{font-size:20px}
-      .card{padding:14px}
-      img.role{width:68vw; max-width:280px}
-      .level-display{font-size:16px}
-      .role-comment{font-size:14px; line-height:1.6}
-      .level-grid{grid-template-columns:1fr}
-      .share .buttons .button{width:100%}
-      .radar-wrap{height:300px; max-width:100%;}
-      
-/* ===== TOP3（横並び＋小さめイラスト） ===== */
+    
+    /* ===== TOP3（横並び＋小さめイラスト） ===== */
 .top-jobs{
   display:grid;
-  grid-template-columns:repeat(3,1fr); /* PC: 常に3列 */
+  grid-template-columns:repeat(3,1fr);
   gap:10px;
   align-items:start;
 }
@@ -110,7 +98,7 @@
   text-align:center;
 }
 .top-jobs .job-card img{
-  width:72px;        /* PC基準の小さめサイズ */
+  width:72px;
   height:auto;
   margin:4px auto 8px;
   display:block;
@@ -135,7 +123,7 @@
   .top-jobs{ grid-template-columns:1fr; }
   .top-jobs .job-card{
     display:grid;
-    grid-template-columns:auto 1fr; /* 左に小画像、右にテキスト */
+    grid-template-columns:auto 1fr;
     gap:10px;
     text-align:left;
     align-items:center;
@@ -145,8 +133,24 @@
   .top-jobs .lvl{ font-size:12px; }
 }
 
+    
+    
+    @media(max-width:480px){
+      .container{padding:12px}
+      header .bar{padding:8px 12px}
+      .hero img{width:100%; max-width:none}
+      h1,h2{font-size:20px}
+      .card{padding:14px}
+      img.role{width:68vw; max-width:280px}
+      .level-display{font-size:16px}
+      .role-comment{font-size:14px; line-height:1.6}
+      .level-grid{grid-template-columns:1fr}
+      .share .buttons .button{width:100%}
+      .radar-wrap{height:300px; max-width:100%;}
+      
 
-    }
+}
+
   </style>
 </head>
 <body>
@@ -1196,7 +1200,7 @@ function renderTopJobs(radar){
           <div class="job-card rank-${i+1}">
             <div class="small muted">${j.axisLabel}／${j.mode==='hyper'?'過敏':'鈍麻'}</div>
             ${j.img ? `<img src="${j.img}" alt="${j.title}">` : ``}
-            <div style="font-weight:700;margin-top:6px">${j.title}</div>
+            <div class="title">${j.title}</div>
             <div class="lv">Lv${String(j.level).padStart(2,'0')}</div>
           </div>
         `).join('')}
@@ -1225,7 +1229,7 @@ function renderTopJobs(radar){
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.22";
+  const APP_VERSION = "1.23";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
