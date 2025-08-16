@@ -260,7 +260,7 @@
 
 // === 拡散向けコピー設定 ===
 const FUNNY_COPY_ON = true; // ←面白コメントの自動追加をON/OFFできるトグル
-const SHARE_HASH = '#KANKAKUクエスト #感覚ジョブ診断 #イベント告知';
+const SHARE_HASH = '#KANKAKUクエスト #感覚ジョブ診断 #発達障害';
 
     // === 軽めのファンタジー寄り一言（配慮を保つ） ===
 const FUN_LINES = {
@@ -701,7 +701,10 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
     } else {
       tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
     }
-    return head + '\n' + '称号「' + title + '」 ' + lv + '\n' + tendency;
+    return head + '\n' +
+  '称号「' + title + '」 ' + lv + '\n' +
+  tendency + '\n' +
+  (hashtags || SHARE_HASH);
   }
 
   const head = '【感覚クエスト⚔️診断結果】';
@@ -1320,7 +1323,7 @@ function renderTopJobs(radar){
 
 <script>
   // バージョン番号（手動で更新）
-  const APP_VERSION = "1.242";
+  const APP_VERSION = "1.243";
 
   // ページ読み込み時に現在の日時を取得して表示
   window.addEventListener('DOMContentLoaded', () => {
