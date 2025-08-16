@@ -688,7 +688,6 @@ if (jobsBtn && jobsPanel){
 
     /* ===== シェア文（配慮＋ちょい遊び） ===== */
 function buildShareText({ title, level, finalType, overallType, dominant }){
-  // 面白コメントを切り替え可能
   if (!FUNNY_COPY_ON){
     const axisLabel = getAxisLabel(dominant);
     const head = '【感覚クエスト⚔️診断結果】';
@@ -701,17 +700,16 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
     } else {
       tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
     }
+    // ← ハッシュタグは入れない
     return head + '\n' +
-  '称号「' + title + '」 ' + lv + '\n' +
-  tendency + '\n' +
-  (hashtags || SHARE_HASH);
+      '称号「' + title + '」 ' + lv + '\n' +
+      tendency;
   }
 
   const head = '【感覚クエスト⚔️診断結果】';
   const lv = 'Lv' + String(level).padStart(2,'0');
   const axisLabel = getAxisLabel(dominant);
 
-  // ①中立の傾向文（配慮寄り）
   let tendency = '';
   if (finalType === 'dual') {
     tendency = '過敏と鈍麻の“両極端”タイプ！';
@@ -721,7 +719,6 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
     tendency = (axisLabel ? axisLabel : '') + (overallType === 'hyper' ? '過敏' : '鈍麻') + 'がやや高め。';
   }
 
-  // ②軽いファンタジー寄り一言（状況改善のヒント系）
   let fun = '';
   if (finalType === 'balanced') {
     fun = FUN_LINES.balanced;
@@ -731,18 +728,15 @@ function buildShareText({ title, level, finalType, overallType, dominant }){
     fun = FUN_LINES[dominant][overallType];
   }
 
-  // ③ゆるいCTA（参加/共感を促すが強制しない）
   const cta = 'あなたは何タイプ？';
 
-  // 仕上げ（280文字対策で短文を積む）
-  // URLはX共有側で別途つけてもOKですが、現状はテキストのみなのでここでは付けません。
+  // ← 配列の最後にあった SHARE_HASH を削除
   return [
     head,
     '称号「' + title + '」 ' + lv,
     tendency,
     fun ? '— ' + fun : '',
-    cta,
-    SHARE_HASH
+    cta
   ].filter(Boolean).join('\n');
 }
 
